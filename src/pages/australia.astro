@@ -3,14 +3,14 @@ import Layout from '../layouts/Layout.astro';
 ---
 <Layout title="澳洲準備">
   <div class="flex items-center justify-between px-5 py-3.5 bg-card border-b border-gray-mid">
-    <h1 class="text-lg font-bold text-dark" style="font-family:'Cormorant Garamond','Noto Sans TC',serif;letter-spacing:0.02em">🌴 澳洲準備</h1>
+    <h1 class="text-lg font-bold text-dark flex items-center gap-2" style="font-family:'Cormorant Garamond','Noto Sans TC',serif;letter-spacing:0.02em"><span id="title-palm"></span> 澳洲準備</h1>
     <button onclick="SB.signOut()" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-mid bg-transparent text-gray-text cursor-pointer" style="font-family:'Noto Sans TC',sans-serif">登出</button>
   </div>
 
   <div class="px-4 pt-5 pb-24">
     <!-- Subtitle -->
     <div class="text-center mb-5">
-      <p class="text-sm" style="color:var(--color-gray-text)">一起規劃我們的澳洲冒險之旅 ✈️</p>
+      <p class="text-sm" style="color:var(--color-gray-text)">一起規劃我們的澳洲冒險之旅</p>
     </div>
 
     <!-- Progress -->
@@ -41,9 +41,9 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <nav class="bottom-nav">
-    <a href="/habits"><span class="nav-icon">☰</span><span>習慣</span></a>
-    <a href="/calendar"><span class="nav-icon">📅</span><span>月曆</span></a>
-    <a href="/australia" class="active"><span class="nav-icon">🌴</span><span>澳洲</span></a>
+    <a href="/habits"><span class="nav-icon" id="nav-habits"></span><span>習慣</span></a>
+    <a href="/calendar"><span class="nav-icon" id="nav-calendar"></span><span>月曆</span></a>
+    <a href="/australia" class="active"><span class="nav-icon" id="nav-australia"></span><span>澳洲</span></a>
   </nav>
 
   <!-- Add/Edit Modal -->
@@ -85,11 +85,14 @@ import Layout from '../layouts/Layout.astro';
   <script is:inline>
     let auItems=[],auFilter='全部',editId=null,deleteId=null;
 
-    const CAT_ICONS={'簽證文件':'📋','行前準備':'🧳','工作準備':'💼','住宿安排':'🏠','交通規劃':'✈️','其他事項':'📌'};
+    const CAT_ICONS={'簽證文件':ICONS.clipboard,'行前準備':ICONS.luggage,'工作準備':ICONS.briefcase,'住宿安排':ICONS.home,'交通規劃':ICONS.plane,'其他事項':ICONS.pin};
     const PRIORITY_COLORS={'高優先':'var(--color-red)','中優先':'var(--color-me)','低優先':'var(--color-green)'};
 
     const EDIT_SVG=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
     const DEL_SVG=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
+
+    // Inject title icon
+    if(ICONS){const tp=document.getElementById('title-palm');if(tp)tp.innerHTML=ICONS.palmtree;}
 
     async function loadItems(){
       auItems=await SB.loadAustralia();
@@ -114,7 +117,9 @@ import Layout from '../layouts/Layout.astro';
       }).join('');
 
       // Items
-      const filtered=auFilter==='全部'?auItems:auItems.filter(i=>i.category===auFilter);
+      const PRIORITY_ORDER={'高優先':0,'中優先':1,'低優先':2};
+      const sorted=[...(auFilter==='全部'?auItems:auItems.filter(i=>i.category===auFilter))].sort((a,b)=>(PRIORITY_ORDER[a.priority]??9)-(PRIORITY_ORDER[b.priority]??9));
+      const filtered=sorted;
       document.getElementById('au-items').innerHTML=filtered.map(item=>{
         const pColor=PRIORITY_COLORS[item.priority]||'var(--color-me)';
         const catIcon=CAT_ICONS[item.category]||'📋';
@@ -134,16 +139,16 @@ import Layout from '../layouts/Layout.astro';
             </div>
           </div>
           ${item.description?`<div style="margin:10px 0 0 40px;padding:10px 14px;border-radius:12px;background:var(--color-gray-light);font-size:13px;color:var(--color-dark);line-height:1.6">${item.description}</div>`:''}
-          ${item.reference?`<div style="margin:8px 0 0 40px;padding:10px 14px;border-radius:12px;background:var(--color-me-light);font-size:13px"><span style="font-weight:600;color:var(--color-accent)">🔗 參考</span><br/><span style="color:var(--color-bf);word-break:break-all">${item.reference.startsWith('http')?`<a href="${item.reference}" target="_blank" style="color:var(--color-bf);text-decoration:underline">${item.reference}</a>`:item.reference}</span></div>`:''}
-          ${item.notes?`<div style="margin:8px 0 0 40px;padding:10px 14px;border-radius:12px;background:var(--color-warm-section);font-size:13px"><span style="font-weight:600;color:var(--color-bf)">💡 備註</span><br/><span style="color:var(--color-dark)">${item.notes}</span></div>`:''}
+          ${item.reference?`<div style="margin:8px 0 0 40px;padding:10px 14px;border-radius:12px;background:var(--color-me-light);font-size:13px"><span style="font-weight:600;color:var(--color-accent);display:inline-flex;align-items:center;gap:4px">${ICONS.link} 參考</span><br/><span style="color:var(--color-bf);word-break:break-all">${item.reference.startsWith('http')?`<a href="${item.reference}" target="_blank" style="color:var(--color-bf);text-decoration:underline">${item.reference}</a>`:item.reference}</span></div>`:''}
+          ${item.notes?`<div style="margin:8px 0 0 40px;padding:10px 14px;border-radius:12px;background:var(--color-warm-section);font-size:13px"><span style="font-weight:600;color:var(--color-bf);display:inline-flex;align-items:center;gap:4px">${ICONS.lightbulb} 備註</span><br/><span style="color:var(--color-dark)">${item.notes}</span></div>`:''}
         </div>`;
-      }).join('')||'<p class="text-center text-gray-text py-8">還沒有準備事項 🌴</p>';
+      }).join('')||'<p class="text-center text-gray-text py-8">還沒有準備事項</p>';
 
       // Stats
       const catList=Object.keys(CAT_ICONS);
       document.getElementById('au-stats').innerHTML=`
         <div class="habit-card">
-          <h3 style="font-size:15px;font-weight:700;margin-bottom:14px;font-family:'Cormorant Garamond',serif;letter-spacing:0.02em">📊 分類統計</h3>
+          <h3 style="font-size:15px;font-weight:700;margin-bottom:14px;font-family:'Cormorant Garamond',serif;letter-spacing:0.02em">${ICONS.chart} 分類統計</h3>
           <div class="grid grid-cols-2 gap-3">
             ${catList.map(c=>{
               const items=auItems.filter(i=>i.category===c);

@@ -15,8 +15,8 @@ import Layout from '../layouts/Layout.astro';
       <img id="banner-img" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop" draggable="false" />
       <div class="cover-controls">
         <input type="range" min="100" max="300" value="100" class="cover-zoom" id="banner-zoom" title="縮放" />
-        <label class="cursor-pointer">📷<input type="file" accept="image/*" id="banner-file" class="hidden" /></label>
-        <button id="banner-url-btn" title="網址">🔗</button>
+        <label class="cursor-pointer"><span class="cam-icon"></span><input type="file" accept="image/*" id="banner-file" class="hidden" /></label>
+        <button id="banner-url-btn" title="網址"><span class="link-icon"></span></button>
       </div>
     </div>
   </div>
@@ -30,8 +30,8 @@ import Layout from '../layouts/Layout.astro';
 
   <div class="px-4 pt-4 pb-2">
     <div class="flex rounded-2xl overflow-hidden border border-gray-mid">
-      <button id="tab-today" class="flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 tab-active rounded-2xl transition-all">🎯 今日目標</button>
-      <button id="tab-shared" class="flex-1 py-3 text-sm font-semibold tab-inactive rounded-2xl transition-all">♡ 共同</button>
+      <button id="tab-today" class="flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 tab-active rounded-2xl transition-all"><span class="inline-icon" id="icon-target"></span> 今日目標</button>
+      <button id="tab-shared" class="flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 tab-inactive rounded-2xl transition-all"><span class="inline-icon" id="icon-heart"></span> 共同</button>
       <button id="tab-all" class="flex-1 py-3 text-sm font-semibold tab-inactive rounded-2xl transition-all">全部</button>
     </div>
   </div>
@@ -42,9 +42,9 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <nav class="bottom-nav">
-    <a href="/habits" class="active"><span class="nav-icon">☰</span><span>習慣</span></a>
-    <a href="/calendar"><span class="nav-icon">📅</span><span>月曆</span></a>
-    <a href="/australia"><span class="nav-icon">🌴</span><span>澳洲</span></a>
+    <a href="/habits" class="active"><span class="nav-icon" id="nav-habits"></span><span>習慣</span></a>
+    <a href="/calendar"><span class="nav-icon" id="nav-calendar"></span><span>月曆</span></a>
+    <a href="/australia"><span class="nav-icon" id="nav-australia"></span><span>澳洲</span></a>
   </nav>
 
   <!-- User Modal -->
@@ -120,6 +120,12 @@ import Layout from '../layouts/Layout.astro';
     ];
 
     // ===== Auth + Init =====
+    // Inject tab icons
+    if(ICONS){
+      const it=document.getElementById('icon-target');if(it)it.innerHTML=ICONS.target;
+      const ih=document.getElementById('icon-heart');if(ih)ih.innerHTML=ICONS.heart;
+    }
+
     async function appInit(){
       if(SB.initFromCache()){
         updateGreeting();
@@ -334,8 +340,8 @@ import Layout from '../layouts/Layout.astro';
           <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:10px">
             <h3 style="font-size:16px;font-weight:700;font-family:'Noto Sans TC',sans-serif;color:var(--color-dark)">${h.name} ${allDone?'🎉':''}</h3>
             <div style="display:flex;gap:8px;align-items:center">
-              <button onclick="event.stopPropagation();openEdit(${h.id})" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--color-gray-text)">✏️</button>
-              <button onclick="event.stopPropagation();openDelete(${h.id})" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--color-red)">🗑️</button>
+              <button onclick="event.stopPropagation();openEdit(${h.id})" style="background:none;border:none;cursor:pointer;padding:4px" title="編輯">${ICONS.edit}</button>
+              <button onclick="event.stopPropagation();openDelete(${h.id})" style="background:none;border:none;cursor:pointer;padding:4px" title="刪除">${ICONS.trash}</button>
             </div>
           </div>
           ${h.users.map(u=>`
@@ -378,8 +384,8 @@ import Layout from '../layouts/Layout.astro';
             ${h.streak>0?`<p style="font-size:13px;color:var(--color-streak)">🔥 ${h.streak} 天</p>`:''}
           </div>
           ${isMine?`
-            <button onclick="event.stopPropagation();openEdit(${h.id})" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--color-gray-text)">✏️</button>
-            <button onclick="event.stopPropagation();openDelete(${h.id})" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--color-red)">🗑️</button>
+            <button onclick="event.stopPropagation();openEdit(${h.id})" style="background:none;border:none;cursor:pointer;padding:4px" title="編輯">${ICONS.edit}</button>
+            <button onclick="event.stopPropagation();openDelete(${h.id})" style="background:none;border:none;cursor:pointer;padding:4px" title="刪除">${ICONS.trash}</button>
           `:''}
         </div>
       </div>`;

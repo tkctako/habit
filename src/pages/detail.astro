@@ -18,8 +18,8 @@ import Layout from '../layouts/Layout.astro';
       <span id="cover-text" class="text-gray-text text-sm absolute inset-0 flex items-center justify-center z-5">📷 添加封面圖片</span>
       <div class="cover-controls">
         <input type="range" min="100" max="300" value="100" class="cover-zoom" id="cover-zoom" />
-        <label class="cursor-pointer">📷<input type="file" accept="image/*" id="cover-file" class="hidden" /></label>
-        <button id="cover-url-btn">🔗</button>
+        <label class="cursor-pointer"><span class="cam-icon"></span><input type="file" accept="image/*" id="cover-file" class="hidden" /></label>
+        <button id="cover-url-btn"><span class="link-icon"></span></button>
       </div>
     </div>
 
@@ -29,9 +29,9 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <nav class="bottom-nav">
-    <a href="/habits"><span class="text-lg">☰</span><span>習慣</span></a>
-    <a href="/calendar"><span class="text-lg">📅</span><span>月曆</span></a>
-    <a href="/australia"><span class="text-lg">🌴</span><span>澳洲</span></a>
+    <a href="/habits"><span class="nav-icon" id="nav-habits"></span><span>習慣</span></a>
+    <a href="/calendar"><span class="nav-icon" id="nav-calendar"></span><span>月曆</span></a>
+    <a href="/australia"><span class="nav-icon" id="nav-australia"></span><span>澳洲</span></a>
   </nav>
 
   <div id="record-modal" class="modal-backdrop" style="display:none">
@@ -158,10 +158,10 @@ import Layout from '../layouts/Layout.astro';
           body=r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-sm">${r.note}</p></div>`:'';
         }
         const userBadge=habit.type==='shared'?`<span style="font-size:13px;margin-left:8px">${r.userEmoji} ${r.userName}</span>`:'';
-        const editBtns=r.isMe?`<button onclick="openEditR(${r.id})" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--color-gray-text)">✏️</button><button onclick="deleteR(${r.id})" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--color-red)">🗑️</button>`:'';
+        const editBtns=r.isMe?`<button onclick="openEditR(${r.id})" style="background:none;border:none;cursor:pointer;padding:4px" title="編輯">${ICONS.edit}</button><button onclick="deleteR(${r.id})" style="background:none;border:none;cursor:pointer;padding:4px" title="刪除">${ICONS.trash}</button>`:'';
         const checked=isCheckedIn(r.date,r.user_id);
         const checkBtn=r.isMe?`<button class="check-btn ${checked?'check-done':'check-none'}" onclick="toggleRecordCheck('${r.date}')" style="flex-shrink:0">${checked?'✓':'✕'}</button>`:`<span class="check-btn ${checked?'check-done':'check-none'}" style="flex-shrink:0;opacity:0.4;cursor:default">${checked?'✓':'✕'}</span>`;
-        return`<div class="habit-card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">${checkBtn}<span style="font-size:14px;color:var(--color-gray-text);flex:1">📅 ${dateDisplay}${userBadge}</span><div style="display:flex;gap:8px">${editBtns}</div></div>${body}</div>`;
+        return`<div class="habit-card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">${checkBtn}<span style="font-size:14px;color:var(--color-gray-text);flex:1">${ICONS.calendarDay} ${dateDisplay}${userBadge}</span><div style="display:flex;gap:8px">${editBtns}</div></div>${body}</div>`;
       }).join('');
     }
 

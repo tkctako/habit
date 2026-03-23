@@ -10,6 +10,7 @@ const { title } = Astro.props;
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>{title}</title>
+  <script is:inline src="/icons.js"></script>
   <script is:inline src="/sb.js"></script>
 </head>
 <body class="bg-bg">
@@ -22,6 +23,13 @@ const { title } = Astro.props;
   <script is:inline>
     // Auto-hide guard on login page
     if(window.location.pathname==='/') document.getElementById('auth-guard').style.display='none';
+    // Inject SVG icons globally
+    if(window.ICONS){
+      const m={['nav-habits']:'habits',['nav-calendar']:'calendar',['nav-australia']:'palmtree'};
+      Object.entries(m).forEach(([id,key])=>{const el=document.getElementById(id);if(el&&ICONS[key])el.innerHTML=ICONS[key];});
+      document.querySelectorAll('.cam-icon').forEach(el=>el.innerHTML=ICONS.camera);
+      document.querySelectorAll('.link-icon').forEach(el=>el.innerHTML=ICONS.link);
+    }
   </script>
 </body>
 </html>

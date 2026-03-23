@@ -130,7 +130,8 @@ h1, h2, h3, h4, .serif {
   width: 32px; height: 3px; border-radius: 0 0 3px 3px;
   background: linear-gradient(135deg, var(--color-me), var(--color-accent));
 }
-.bottom-nav .nav-icon { font-size: 18px; line-height: 1; }
+.bottom-nav .nav-icon { font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; }
+.inline-icon { display: inline-flex; align-items: center; vertical-align: middle; }
 
 /* Add habit button */
 .add-habit-btn {
@@ -182,6 +183,12 @@ h1, h2, h3, h4, .serif {
 }
 .cover-zoom {
   width: 80px; height: 4px; accent-color: var(--color-me);
+}
+
+/* SVG Icons - shared across app */
+:root {
+  --icon-edit: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/%3E%3Cpath d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/%3E%3C/svg%3E");
+  --icon-trash: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23ef4444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3 6 5 6 21 6'/%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
 }
 
 /* Calendar */
