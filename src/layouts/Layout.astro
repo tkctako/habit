@@ -1,0 +1,27 @@
+---
+import '../styles/global.css';
+interface Props { title: string; }
+const { title } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>{title}</title>
+  <script is:inline src="/sb.js"></script>
+</head>
+<body class="bg-bg">
+  <div id="auth-guard" style="position:fixed;inset:0;background:var(--color-bg,#f5efe6);z-index:9999;display:flex;align-items:center;justify-content:center">
+    <span style="color:var(--color-gray-text,#9e8e7e);font-size:14px">載入中...</span>
+  </div>
+  <div class="app-container">
+    <slot />
+  </div>
+  <script is:inline>
+    // Auto-hide guard on login page
+    if(window.location.pathname==='/') document.getElementById('auth-guard').style.display='none';
+  </script>
+</body>
+</html>

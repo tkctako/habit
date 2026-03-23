@@ -1,0 +1,269 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="月曆">
+  <div class="flex items-center justify-between px-5 py-3.5 bg-card border-b border-gray-mid">
+    <h1 class="text-lg font-bold text-dark">月曆</h1>
+    <button onclick="SB.signOut()" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-mid bg-transparent text-gray-text cursor-pointer" style="font-family:'Noto Sans TC',sans-serif">登出</button>
+  </div>
+
+  <div class="px-4 pt-4 pb-24">
+    <div class="cover-container mb-5">
+      <img id="cal-cover-img" draggable="false" style="display:none" />
+      <span id="cal-cover-text" class="text-gray-text text-sm absolute inset-0 flex items-center justify-center z-5">📷 添加封面圖片</span>
+      <div class="cover-controls">
+        <input type="range" min="100" max="300" value="100" class="cover-zoom" id="cal-zoom" />
+        <label class="cursor-pointer">📷<input type="file" accept="image/*" id="cal-file" class="hidden" /></label>
+        <button id="cal-url-btn">🔗</button>
+      </div>
+    </div>
+
+    <div class="bg-card rounded-2xl p-5 shadow-sm mb-4" style="border:1px solid var(--color-gray-mid)">
+      <div class="flex items-center justify-between mb-5">
+        <button id="prev-month" class="text-2xl text-gray-text px-2 bg-transparent border-none cursor-pointer">‹</button>
+        <h2 id="month-label" class="text-lg font-bold text-dark"></h2>
+        <button id="next-month" class="text-2xl text-gray-text px-2 bg-transparent border-none cursor-pointer">›</button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm flex items-center gap-1" id="progress-me-label">👩 我</span>
+            <span id="my-pct" class="text-sm font-bold" style="color:var(--color-me)"></span>
+          </div>
+          <div class="w-full h-2.5 rounded-full" style="background:var(--color-me-light)">
+            <div id="my-bar" class="h-2.5 rounded-full transition-all" style="background:var(--color-me);width:0%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm flex items-center gap-1" id="progress-bf-label">👦 男友</span>
+            <span id="bf-pct" class="text-sm font-bold" style="color:var(--color-bf)"></span>
+          </div>
+          <div class="w-full h-2.5 rounded-full" style="background:var(--color-bf-light)">
+            <div id="bf-bar" class="h-2.5 rounded-full transition-all" style="background:var(--color-bf);width:0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-card rounded-2xl p-5 shadow-sm mb-4" style="border:1px solid var(--color-gray-mid)">
+      <div class="grid grid-cols-7 gap-2 mb-3 text-center">
+        <div class="cal-header">日</div><div class="cal-header">一</div><div class="cal-header">二</div><div class="cal-header">三</div><div class="cal-header">四</div><div class="cal-header">五</div><div class="cal-header">六</div>
+      </div>
+      <div id="cal-days" class="grid grid-cols-7 gap-2"></div>
+    </div>
+
+    <div class="bg-card rounded-2xl p-4 shadow-sm mb-4 flex items-center justify-center gap-8 text-sm" style="border:1px solid var(--color-gray-mid)">
+      <span class="flex items-center gap-1"><span style="width:8px;height:8px;border-radius:50%;background:var(--color-me);display:inline-block"></span> <span id="legend-me">我</span></span>
+      <span class="flex items-center gap-1"><span style="width:8px;height:8px;border-radius:50%;background:var(--color-bf);display:inline-block"></span> <span id="legend-bf">男友</span></span>
+      <span>🎉 全部完成</span>
+    </div>
+
+    <div id="day-detail"></div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="/habits"><span class="text-lg">☰</span><span>習慣</span></a>
+    <a href="/calendar" class="active"><span class="text-lg">📅</span><span>月曆</span></a>
+  </nav>
+
+  <script is:inline>
+    const now=new Date();
+    let viewYear=now.getFullYear(),viewMonth=now.getMonth();
+    let monthHabits=[],monthCheckIns=[],selectedDay=null;
+
+    function myEmoji(){return SB.myProfile?.emoji||'👩';}
+    function bfEmoji(){return SB.partnerProfile?.emoji||'👦';}
+    function partnerLabel(){
+      const e=SB.partnerProfile?.emoji;
+      if(e==='👩')return '女友';
+      return '男友';
+    }
+    function displayName(n){
+      if(n==='我')return SB.myProfile?.display_name||'我';
+      if(n==='男友'||n==='女友')return SB.partnerProfile?.display_name||partnerLabel();
+      return n;
+    }
+
+    // Cover
+    (function(){
+      const imgEl=document.getElementById('cal-cover-img'),zoomEl=document.getElementById('cal-zoom');
+      let scale=100,posX=0,posY=0,dragging=false,startX=0,startY=0,lx=0,ly=0;
+      function apply(){imgEl.style.transform='scale('+(scale/100)+') translate('+posX+'px,'+posY+'px)';}
+      zoomEl.addEventListener('input',function(e){e.stopPropagation();scale=parseInt(this.value);apply();});
+      imgEl.addEventListener('mousedown',function(e){e.preventDefault();e.stopPropagation();dragging=true;startX=e.clientX;startY=e.clientY;lx=posX;ly=posY;});
+      document.addEventListener('mousemove',function(e){if(!dragging)return;posX=lx+(e.clientX-startX)/(scale/100);posY=ly+(e.clientY-startY)/(scale/100);apply();});
+      document.addEventListener('mouseup',function(){dragging=false;});
+      imgEl.addEventListener('touchstart',function(e){dragging=true;startX=e.touches[0].clientX;startY=e.touches[0].clientY;lx=posX;ly=posY;},{passive:true});
+      document.addEventListener('touchmove',function(e){if(!dragging)return;posX=lx+(e.touches[0].clientX-startX)/(scale/100);posY=ly+(e.touches[0].clientY-startY)/(scale/100);apply();},{passive:true});
+      document.addEventListener('touchend',function(){dragging=false;});
+      const CAL_COVER_ID='calendar';
+      let saveTimer=null;
+      function debounceSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{SB.saveCover(CAL_COVER_ID,imgEl.src,Math.round(scale*100),Math.round(posX),Math.round(posY));},800);}
+      document.addEventListener('mouseup',function(){if(dragging){dragging=false;debounceSave();}});
+      document.addEventListener('touchend',function(){if(dragging){dragging=false;debounceSave();}});
+      zoomEl.addEventListener('input',function(){debounceSave();});
+      function setCov(src){imgEl.src=src;imgEl.style.display='block';document.getElementById('cal-cover-text').style.display='none';scale=100;posX=0;posY=0;zoomEl.value=100;apply();SB.saveCover(CAL_COVER_ID,src,100,0,0);}
+      document.getElementById('cal-file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setCov(ev.target.result);r.readAsDataURL(f);});
+      document.getElementById('cal-url-btn').addEventListener('click',()=>{const url=prompt('輸入圖片網址：');if(url)setCov(url);});
+      window._loadCalCover=async function(){
+        const c=await SB.loadCover(CAL_COVER_ID);
+        if(c&&c.image_url){imgEl.src=c.image_url;imgEl.style.display='block';document.getElementById('cal-cover-text').style.display='none';scale=(c.zoom||100);posX=c.pos_x||0;posY=c.pos_y||0;zoomEl.value=c.zoom||100;apply();}
+      };
+    })();
+
+    function getDayData(y,m,d){
+      const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const myId=SB.myId, partnerId=SB.partnerProfile?.id;
+      const results=[];
+      monthHabits.forEach(h=>{
+        if(h.type==='shared'){
+          const myC=monthCheckIns.find(c=>c.habit_id===h.id&&c.user_id===myId&&c.date===dateStr);
+          const bfC=monthCheckIns.find(c=>c.habit_id===h.id&&c.user_id===partnerId&&c.date===dateStr);
+          if(myC||bfC) results.push({name:h.name,myDone:!!myC?.done,bfDone:!!bfC?.done,isShared:true});
+        }else{
+          const isMe=h.owner==='me';
+          const ck=monthCheckIns.find(c=>c.habit_id===h.id&&c.date===dateStr);
+          if(ck) results.push({name:h.name,myDone:isMe?!!ck?.done:null,bfDone:!isMe?!!ck?.done:null,isShared:false,owner:h.owner});
+        }
+      });
+      return results;
+    }
+
+    async function loadMonth(){
+      const me=SB.myProfile;
+      if(!me?.couple_id){monthHabits=[];monthCheckIns=[];return;}
+      const habits=await SB.loadHabits();
+      monthHabits=habits||[];
+      // Need raw habit ids + couple_id for monthCheckIns - get from habits response
+      const habitIds=monthHabits.map(h=>h.id);
+      monthCheckIns=habitIds.length?await SB.loadMonthCheckIns(viewYear,viewMonth,monthHabits):[];
+    }
+
+    function renderCalendar(){
+      const monthNames=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+      document.getElementById('month-label').textContent=`${viewYear} 年 ${monthNames[viewMonth]}`;
+      const firstDay=new Date(viewYear,viewMonth,1).getDay();
+      const daysInMonth=new Date(viewYear,viewMonth+1,0).getDate();
+      const today=now.getDate();
+      const isCur=viewYear===now.getFullYear()&&viewMonth===now.getMonth();
+      const maxDay=daysInMonth;
+
+      let myT=0,myD=0,bfT=0,bfD=0;
+      for(let d=1;d<=daysInMonth;d++){
+        getDayData(viewYear,viewMonth,d).forEach(h=>{
+          if(h.myDone!==null){myT++;if(h.myDone)myD++;}
+          if(h.bfDone!==null){bfT++;if(h.bfDone)bfD++;}
+        });
+      }
+      const myPct=myT?Math.round(myD/myT*100):0;
+      const bfPct=bfT?Math.round(bfD/bfT*100):0;
+      document.getElementById('my-pct').textContent=myPct+'%';
+      document.getElementById('bf-pct').textContent=bfPct+'%';
+      document.getElementById('my-bar').style.width=myPct+'%';
+      document.getElementById('bf-bar').style.width=bfPct+'%';
+
+      let html='';
+      for(let i=0;i<firstDay;i++)html+='<div></div>';
+      for(let d=1;d<=daysInMonth;d++){
+        const isToday=isCur&&d===today;
+        const isSelected=selectedDay===d;
+        const data=getDayData(viewYear,viewMonth,d);
+        const anyMy=data.some(h=>h.myDone);
+        const anyBf=data.some(h=>h.bfDone);
+        const allDone=data.length>0&&data.filter(h=>h.isShared).length>0&&data.filter(h=>h.isShared).every(h=>h.myDone&&h.bfDone);
+        let bg='';
+        if(isSelected)bg='background:var(--color-me);color:white;border:2px solid var(--color-me);';
+        else if(isToday)bg='background:var(--color-me-light);border:2px solid var(--color-me);';
+        else if(anyMy||anyBf)bg='background:var(--color-green-light);';
+        html+=`<div class="text-center py-3 rounded-xl cursor-pointer text-sm" style="${bg}" onclick="showDay(${d})">
+
+          <div class="font-semibold mb-1.5">${d}</div>
+          ${data.length?`<div class="flex items-center justify-center gap-1.5">
+            ${anyMy?`<span style="width:7px;height:7px;border-radius:50%;background:var(--color-me);display:inline-block"></span>`:''}
+            ${anyBf?`<span style="width:7px;height:7px;border-radius:50%;background:var(--color-bf);display:inline-block"></span>`:''}
+          </div>${allDone?'<div class="text-xs mt-0.5">🎉</div>':''}`:''}
+        </div>`;
+      }
+      document.getElementById('cal-days').innerHTML=html;
+    }
+
+    function statusTag(done){
+      return done
+        ?'<span style="font-size:12px;font-weight:600;padding:2px 10px;border-radius:99px;color:white;background:var(--color-green)">✓ 已完成</span>'
+        :'<span style="font-size:12px;font-weight:600;padding:2px 10px;border-radius:99px;background:var(--color-gray-mid);color:var(--color-gray-text)">✕ 未完成</span>';
+    }
+
+    window.showDay=function(day){
+      selectedDay=day;
+      renderCalendar();
+      const data=getDayData(viewYear,viewMonth,day);
+      const shared=data.filter(h=>h.isShared);
+      const personal=data.filter(h=>!h.isShared);
+      const wk=['日','一','二','三','四','五','六'];
+      const dt=new Date(viewYear,viewMonth,day);
+      const myItems=data.filter(h=>h.myDone!==null);
+      const bfItems=data.filter(h=>h.bfDone!==null);
+      const myDone=myItems.filter(h=>h.myDone).length;
+      const bfDone=bfItems.filter(h=>h.bfDone).length;
+      const myPct=myItems.length?Math.round(myDone/myItems.length*100):0;
+      const bfPct=bfItems.length?Math.round(bfDone/bfItems.length*100):0;
+
+      let html=`<div class="flex items-center gap-2 mb-3"><span class="text-lg cursor-pointer" onclick="document.getElementById('day-detail').innerHTML=''">‹</span><h3 class="font-bold">${viewYear}年${viewMonth+1}月${day}日 星期${wk[dt.getDay()]}</h3></div>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div class="bg-card rounded-2xl p-4 shadow-sm" style="border:1px solid var(--color-me-light)"><p class="text-sm mb-1">${myEmoji()} ${displayName('我')}</p><p class="text-2xl font-bold" style="color:var(--color-me)">${myPct}%</p><p class="text-xs text-gray-text">${myDone} / ${myItems.length} 完成</p></div>
+          <div class="rounded-2xl p-4 shadow-sm" style="background:var(--color-gray-light);border:1px solid var(--color-bf-light)"><p class="text-sm mb-1">${bfEmoji()} ${displayName('男友')}</p><p class="text-2xl font-bold" style="color:var(--color-bf)">${bfPct}%</p><p class="text-xs text-gray-text">${bfDone} / ${bfItems.length} 完成</p></div>
+        </div>
+        <h3 class="font-bold mb-2 text-base">習慣詳情</h3>`;
+
+      if(shared.length){
+        html+='<p class="text-xs text-gray-text mb-2 font-semibold">共同習慣</p>';
+        shared.forEach(h=>{
+          const allDone=h.myDone&&h.bfDone;
+          html+=`<div class="habit-card" style="margin-bottom:12px"><h4 style="font-size:15px;font-weight:700;font-family:'Noto Sans TC',sans-serif;margin-bottom:10px">${h.name}</h4>`;
+          html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:10px;margin-bottom:5px;background:var(--color-me-light)"><span style="font-size:14px">${myEmoji()} ${displayName('我')}</span>${statusTag(h.myDone)}</div>`;
+          html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:10px;background:var(--color-gray-light)"><span style="font-size:14px">${bfEmoji()} ${displayName('男友')}</span>${statusTag(h.bfDone)}</div>`;
+          if(allDone)html+=`<div class="text-center py-2 rounded-xl text-sm mt-2" style="background:var(--color-me-light)">🎉 兩人都完成了！</div>`;
+          html+='</div>';
+        });
+      }
+      if(personal.length){
+        html+='<p class="text-xs text-gray-text mb-2 mt-3 font-semibold">個人習慣</p>';
+        personal.forEach(h=>{
+          const emoji=h.owner==='me'?myEmoji():bfEmoji();
+          const name=h.owner==='me'?displayName('我'):displayName('男友');
+          const done=h.owner==='me'?h.myDone:h.bfDone;
+          html+=`<div class="habit-card" style="margin-bottom:12px"><h4 style="font-size:15px;font-weight:700;font-family:'Noto Sans TC',sans-serif;margin-bottom:10px">${h.name}</h4>`;
+          html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:10px;background:${h.owner==='me'?'var(--color-me-light)':'var(--color-gray-light)'}"><span style="font-size:14px">${emoji} ${name}</span>${statusTag(done)}</div>`;
+          html+='</div>';
+        });
+      }
+      if(!data.length)html+='<p class="text-center text-gray-text py-4">這天沒有資料</p>';
+      html+='<div style="height:80px"></div>';
+      document.getElementById('day-detail').innerHTML=html;
+    };
+
+    document.getElementById('prev-month').addEventListener('click',async()=>{viewMonth--;if(viewMonth<0){viewMonth=11;viewYear--;}selectedDay=null;await loadMonth();renderCalendar();document.getElementById('day-detail').innerHTML='';});
+    document.getElementById('next-month').addEventListener('click',async()=>{viewMonth++;if(viewMonth>11){viewMonth=0;viewYear++;}selectedDay=null;await loadMonth();renderCalendar();document.getElementById('day-detail').innerHTML='';});
+
+    function updateLabels(){
+      document.getElementById('progress-me-label').textContent=myEmoji()+' '+displayName('我');
+      document.getElementById('progress-bf-label').textContent=bfEmoji()+' '+displayName('男友');
+      document.getElementById('legend-me').textContent=displayName('我');
+      document.getElementById('legend-bf').textContent=displayName('男友');
+    }
+    async function appInit(){
+      if(SB.initFromCache()){
+        updateLabels();
+        document.getElementById('auth-guard').style.display='none';
+      }
+      const ok=await SB.init();
+      if(!ok||!SB.myProfile){window.location.href='/';return;}
+      updateLabels();
+      await Promise.all([loadMonth(), window._loadCalCover?.()]);
+      document.getElementById('auth-guard').style.display='none';
+      renderCalendar();
+    }
+    appInit();
+  </script>
+</Layout>

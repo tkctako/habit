@@ -1,0 +1,223 @@
+<!DOCTYPE html><html lang="zh-Hant"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><title>習慣追蹤</title><script src="/sb.js"></script><link rel="stylesheet" href="/_astro/Layout.c1_6T_iV.css"></head> <body class="bg-bg"> <div id="auth-guard" style="position:fixed;inset:0;background:var(--color-bg,#f5efe6);z-index:9999;display:flex;align-items:center;justify-content:center"> <span style="color:var(--color-gray-text,#9e8e7e);font-size:14px">載入中...</span> </div> <div class="app-container">  <div class="flex items-center justify-between px-5 py-3.5 bg-card border-b border-gray-mid"> <div class="flex items-center gap-2 cursor-pointer" onclick="openUserModal()"> <span class="w-8 h-8 rounded-full flex items-center justify-center text-sm" style="background:var(--color-me-light);color:var(--color-accent)">👤</span> <span id="user-greeting" class="text-sm font-semibold text-dark"></span> </div> <button onclick="SB.signOut()" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-mid bg-transparent text-gray-text cursor-pointer" style="font-family:'Noto Sans TC',sans-serif">登出</button> </div> <div class="px-4 pt-4"> <div id="banner-cover" class="cover-container"> <img id="banner-img" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop" draggable="false"> <div class="cover-controls"> <input type="range" min="100" max="300" value="100" class="cover-zoom" id="banner-zoom" title="縮放"> <label class="cursor-pointer">📷<input type="file" accept="image/*" id="banner-file" class="hidden"></label> <button id="banner-url-btn" title="網址">🔗</button> </div> </div> </div>  <div id="invite-banner" class="mx-4 mt-3 rounded-2xl p-3 text-center text-sm" style="background:var(--color-me-light);display:none"> <span class="text-gray-text">你的配對碼：</span> <span id="invite-code" class="font-bold" style="color:var(--color-accent);letter-spacing:0.15em"></span> <span class="text-gray-text">（分享給另一半）</span> </div> <div class="px-4 pt-4 pb-2"> <div class="flex rounded-2xl overflow-hidden border border-gray-mid"> <button id="tab-shared" class="flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 tab-active rounded-2xl transition-all">♡ 共同習慣</button> <button id="tab-all" class="flex-1 py-3 text-sm font-semibold tab-inactive rounded-2xl transition-all">全部習慣</button> </div> </div> <div id="habits-container" class="px-4 pb-3 space-y-3.5"></div> <div id="add-wrap" class="px-4 pb-28"> <button id="add-btn" class="add-habit-btn">+ 新增共同習慣</button> </div> <nav class="bottom-nav"> <a href="/habits" class="active"><span class="text-lg">☰</span><span>習慣</span></a> <a href="/calendar"><span class="text-lg">📅</span><span>月曆</span></a> </nav>  <div id="user-modal" class="modal-backdrop" style="display:none"> <div class="modal-content"> <div class="flex items-center justify-between mb-5"> <h2 class="text-lg font-bold">個人設定</h2> <button onclick="document.getElementById('user-modal').style.display='none'" class="text-2xl text-gray-text cursor-pointer bg-transparent border-none">×</button> </div> <form id="user-form" class="space-y-4"> <div><label class="block text-sm font-semibold mb-1.5">你的名稱</label><input type="text" id="uf-name" class="form-input" placeholder="輸入名稱"></div> <div class="flex gap-3 pt-2"> <button type="button" onclick="document.getElementById('user-modal').style.display='none'" class="btn-outline flex-1">取消</button> <button type="submit" class="btn-gradient flex-1">儲存</button> </div> </form> <hr style="border:none;border-top:1px solid var(--color-gray-mid);margin:20px 0 16px"> <form id="pw-form" class="space-y-4"> <h3 class="text-base font-bold">變更密碼</h3> <div><label class="block text-sm font-semibold mb-1.5">新密碼</label><input type="password" id="pw-new" class="form-input" placeholder="至少 6 個字元"></div> <div><label class="block text-sm font-semibold mb-1.5">確認新密碼</label><input type="password" id="pw-confirm" class="form-input" placeholder="再輸入一次"></div> <div id="pw-error" class="text-sm text-center" style="color:var(--color-red);display:none"></div> <div id="pw-success" class="text-sm text-center" style="color:var(--color-green);display:none"></div> <button type="submit" class="btn-outline w-full">更新密碼</button> </form> </div> </div>  <div id="habit-modal" class="modal-backdrop" style="display:none"> <div class="modal-content"> <div class="flex items-center justify-between mb-6"> <h2 id="modal-title" class="text-xl font-bold">新增習慣</h2> <button id="modal-close" class="text-2xl text-gray-text cursor-pointer bg-transparent border-none">×</button> </div> <form id="habit-form" class="space-y-5"> <div><label class="block text-sm font-semibold mb-1.5">習慣名稱</label><input type="text" id="hf-name" placeholder="例如：早起運動" class="form-input" required></div> <div><label class="block text-sm font-semibold mb-1.5">類型</label><select id="hf-type" class="form-select"><option value="shared">共同習慣</option><option value="personal">個人習慣</option></select></div> <div><label class="block text-sm font-semibold mb-1.5">分類</label><select id="hf-cat" class="form-select"><option value="一般習慣">一般習慣</option><option value="感恩紀錄">感恩紀錄</option><option value="學習">學習</option><option value="運動">運動</option><option value="飲食">飲食</option></select></div> <div class="flex gap-3 pt-2"> <button type="button" id="modal-cancel" class="btn-outline flex-1">取消</button> <button type="submit" id="modal-submit" class="btn-gradient flex-1">新增</button> </div> </form> </div> </div> <div id="delete-modal" class="modal-backdrop" style="display:none"> <div class="modal-content text-center"> <p class="text-lg font-bold mb-2">確定刪除？</p> <p class="text-gray-text text-sm mb-6">此操作無法復原</p> <div class="flex gap-3"> <button id="del-cancel" class="btn-outline flex-1">取消</button> <button id="del-confirm" class="flex-1 py-3 rounded-2xl text-white font-semibold cursor-pointer border-none" style="background:var(--color-red)">刪除</button> </div> </div> </div> <script>
+    let currentTab='shared',editingId=null,deletingId=null,habitsCache=[];
+
+    // ===== Auth + Init =====
+    async function appInit(){
+      // Instant render from cache
+      if(SB.initFromCache()){
+        updateGreeting();
+        document.getElementById('auth-guard').style.display='none';
+      }
+      // Full init in background
+      const ok=await SB.init();
+      if(!ok||!SB.myProfile){window.location.href='/';return;}
+      updateGreeting();
+      if(!SB.partnerProfile){
+        const code=await SB.getInviteCode();
+        if(code){
+          document.getElementById('invite-code').textContent=code;
+          document.getElementById('invite-banner').style.display='';
+        }
+      }
+      // Load habits + cover in parallel
+      await Promise.all([reloadHabits(), window._loadBannerCover?.()]);
+      document.getElementById('auth-guard').style.display='none';
+      render();
+    }
+
+    function myEmoji(){return SB.myProfile?.emoji||'👩';}
+    function bfEmoji(){return SB.partnerProfile?.emoji||'👦';}
+    function partnerLabel(){
+      const e=SB.partnerProfile?.emoji;
+      if(e==='👩')return '女友';
+      return '男友';
+    }
+    function displayName(n){
+      if(n==='我')return SB.myProfile?.display_name||'我';
+      if(n==='男友'||n==='女友')return SB.partnerProfile?.display_name||partnerLabel();
+      return n;
+    }
+    function updateGreeting(){document.getElementById('user-greeting').textContent=displayName('我')+'，歡迎 ♡';}
+
+    window.openUserModal=function(){
+      document.getElementById('uf-name').value=SB.myProfile?.display_name||'';
+      document.getElementById('pw-new').value='';
+      document.getElementById('pw-confirm').value='';
+      document.getElementById('pw-error').style.display='none';
+      document.getElementById('pw-success').style.display='none';
+      document.getElementById('user-modal').style.display='flex';
+    };
+    document.getElementById('user-form').addEventListener('submit',async function(e){
+      e.preventDefault();
+      const name=document.getElementById('uf-name').value.trim();
+      if(name){await SB.updateDisplayName(name);updateGreeting();render();}
+      document.getElementById('user-modal').style.display='none';
+    });
+
+    // Password change
+    document.getElementById('pw-form').addEventListener('submit',async function(e){
+      e.preventDefault();
+      const pw=document.getElementById('pw-new').value;
+      const pw2=document.getElementById('pw-confirm').value;
+      const err=document.getElementById('pw-error');
+      const ok=document.getElementById('pw-success');
+      err.style.display='none';ok.style.display='none';
+      if(pw.length<6){err.textContent='密碼至少 6 個字元';err.style.display='';return;}
+      if(pw!==pw2){err.textContent='兩次密碼不一致';err.style.display='';return;}
+      try{await SB.updatePassword(pw);}
+      catch(e){err.textContent=e.message;err.style.display='';return;}
+      ok.textContent='密碼已更新 ✓';ok.style.display='';
+      document.getElementById('pw-new').value='';
+      document.getElementById('pw-confirm').value='';
+    });
+
+    async function reloadHabits(){habitsCache=await SB.loadHabits();}
+    function getHabits(){return habitsCache;}
+
+    // ===== Cover =====
+    (function(){
+      const COVER_ID='habits-banner';
+      const imgEl=document.getElementById('banner-img'),zoomEl=document.getElementById('banner-zoom');
+      let scale=1,posX=0,posY=0,dragging=false,startX=0,startY=0,lx=0,ly=0;
+      let saveTimer=null;
+      function apply(){imgEl.style.transform='scale('+scale+') translate('+posX+'px,'+posY+'px)';}
+      function debounceSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{SB.saveCover(COVER_ID,imgEl.src,Math.round(scale*100),Math.round(posX),Math.round(posY));},800);}
+      zoomEl.addEventListener('input',function(e){e.stopPropagation();scale=parseInt(this.value)/100;apply();debounceSave();});
+      imgEl.addEventListener('mousedown',function(e){e.preventDefault();e.stopPropagation();dragging=true;startX=e.clientX;startY=e.clientY;lx=posX;ly=posY;});
+      document.addEventListener('mousemove',function(e){if(!dragging)return;posX=lx+(e.clientX-startX)/scale;posY=ly+(e.clientY-startY)/scale;apply();});
+      document.addEventListener('mouseup',function(){if(dragging){dragging=false;debounceSave();}});
+      imgEl.addEventListener('touchstart',function(e){dragging=true;startX=e.touches[0].clientX;startY=e.touches[0].clientY;lx=posX;ly=posY;},{passive:true});
+      document.addEventListener('touchmove',function(e){if(!dragging)return;posX=lx+(e.touches[0].clientX-startX)/scale;posY=ly+(e.touches[0].clientY-startY)/scale;apply();},{passive:true});
+      document.addEventListener('touchend',function(){if(dragging){dragging=false;debounceSave();}});
+      function setCover(src){imgEl.src=src;scale=1;posX=0;posY=0;zoomEl.value=100;apply();SB.saveCover(COVER_ID,src,100,0,0);}
+      document.getElementById('banner-file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setCover(ev.target.result);r.readAsDataURL(f);});
+      document.getElementById('banner-url-btn').addEventListener('click',()=>{const url=prompt('輸入圖片網址：');if(url)setCover(url);});
+      // Load cover from DB
+      window._loadBannerCover=async function(){
+        const c=await SB.loadCover(COVER_ID);
+        if(c&&c.image_url){imgEl.src=c.image_url;scale=(c.zoom||100)/100;posX=c.pos_x||0;posY=c.pos_y||0;zoomEl.value=c.zoom||100;apply();}
+      };
+    })();
+
+    // ===== Render =====
+    function render(){
+      const habits=getHabits(),c=document.getElementById('habits-container'),aw=document.getElementById('add-wrap');
+      if(currentTab==='shared'){renderShared(habits,c);aw.style.display='block';document.getElementById('add-btn').textContent='+ 新增共同習慣';}
+      else{renderAll(habits,c);aw.style.display='none';}
+    }
+
+    function renderShared(habits,c){
+      const shared=habits.filter(h=>h.type==='shared');
+      if(!shared.length){c.innerHTML='<div class="text-center py-12 text-gray-text">還沒有共同習慣</div>';return;}
+      c.innerHTML=shared.map(h=>{
+        const allDone=h.users.every(u=>u.done);
+        return`<div class="habit-card cursor-pointer" onclick="goDetail(event,${h.id})">
+          <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:10px">
+            <h3 style="font-size:16px;font-weight:700;font-family:'Noto Sans TC',sans-serif;color:var(--color-dark)">${h.name} ${allDone?'🎉':''}</h3>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button onclick="event.stopPropagation();openEdit(${h.id})" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--color-gray-text)">✏️</button>
+              <button onclick="event.stopPropagation();openDelete(${h.id})" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--color-red)">🗑️</button>
+            </div>
+          </div>
+          ${h.users.map(u=>`
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;margin-bottom:5px;background:${u.name==='我'?'var(--color-me-light)':'var(--color-gray-light)'}">
+              <span style="font-size:18px">${u.emoji}</span>
+              <span style="font-weight:600;font-size:15px;flex:1">${displayName(u.name)}</span>
+              ${u.streak>0?`<span style="font-size:13px;color:var(--color-streak)">🔥 ${u.streak} 天</span>`:''}
+            </div>
+          `).join('')}
+        </div>`;
+      }).join('');
+    }
+
+    function renderAll(habits,c){
+      const myShared=habits.filter(h=>h.type==='shared').map(h=>{
+        const me=h.users.find(u=>u.name==='我');
+        return{id:h.id,name:h.name,streak:me?.streak||0,done:me?.done||false,isShared:true};
+      });
+      const myPersonal=habits.filter(h=>h.type==='personal'&&h.owner==='me').map(h=>({id:h.id,name:h.name,streak:h.streak,done:h.done,isShared:false}));
+      const bfShared=habits.filter(h=>h.type==='shared').map(h=>{
+        const bf=h.users.find(u=>u.name==='男友');
+        return{id:h.id,name:h.name,streak:bf?.streak||0,done:bf?.done||false,isShared:true};
+      });
+      const bfPersonal=habits.filter(h=>h.type==='personal'&&h.owner==='bf').map(h=>({id:h.id,name:h.name,streak:h.streak,done:h.done,isShared:false}));
+      let html=`<div class="flex items-center justify-between mb-3 mt-2"><h2 class="text-base font-bold flex items-center gap-2"><span class="text-lg">${myEmoji()}</span> ${displayName('我')}的習慣</h2>
+        <button onclick="openAddPersonal('me')" class="text-sm font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增</button></div>`;
+      [...myShared,...myPersonal].forEach(h=>{html+=flatCard(h,true);});
+      html+=`<div class="flex items-center justify-between mb-3 mt-6"><h2 class="text-base font-bold flex items-center gap-2"><span class="text-lg">${bfEmoji()}</span> ${displayName('男友')}的習慣</h2></div>`;
+      [...bfShared,...bfPersonal].forEach(h=>{html+=flatCard(h,false);});
+      html+='<div style="height:80px"></div>';
+      c.innerHTML=html;
+    }
+
+    function flatCard(h,isMine){
+      return`<div class="habit-card cursor-pointer" style="margin-bottom:12px" onclick="goDetail(event,${h.id})">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="flex:1">
+            <h3 style="font-size:15px;font-weight:700;font-family:'Noto Sans TC',sans-serif">${h.name}</h3>
+            ${h.streak>0?`<p style="font-size:13px;color:var(--color-streak)">🔥 ${h.streak} 天</p>`:''}
+          </div>
+          ${isMine?`
+            <button onclick="event.stopPropagation();openEdit(${h.id})" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--color-gray-text)">✏️</button>
+            <button onclick="event.stopPropagation();openDelete(${h.id})" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--color-red)">🗑️</button>
+          `:''}
+        </div>
+      </div>`;
+    }
+
+    window.goDetail=function(e,id){if(e.target.closest('button'))return;window.location.href='/detail?id='+id;};
+
+    window.toggleShared=async function(id,name){
+      if(name!=='我')return;
+      await SB.toggleCheckIn(id);
+      await reloadHabits();render();
+    };
+    window.toggleAll=async function(id){
+      await SB.toggleCheckIn(id);
+      await reloadHabits();render();
+    };
+
+    // Tabs
+    document.getElementById('tab-shared').addEventListener('click',()=>{
+      currentTab='shared';
+      document.getElementById('tab-shared').className='flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 tab-active rounded-2xl transition-all';
+      document.getElementById('tab-all').className='flex-1 py-3 text-sm font-semibold tab-inactive rounded-2xl transition-all';
+      render();
+    });
+    document.getElementById('tab-all').addEventListener('click',()=>{
+      currentTab='all';
+      document.getElementById('tab-all').className='flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 tab-active rounded-2xl transition-all';
+      document.getElementById('tab-shared').className='flex-1 py-3 text-sm font-semibold tab-inactive rounded-2xl transition-all';
+      render();
+    });
+
+    // Modals
+    const modal=document.getElementById('habit-modal'),delModal=document.getElementById('delete-modal');
+    document.getElementById('add-btn').addEventListener('click',()=>{editingId=null;document.getElementById('modal-title').textContent='新增習慣';document.getElementById('modal-submit').textContent='新增';document.getElementById('hf-name').value='';document.getElementById('hf-type').value='shared';document.getElementById('hf-cat').value='一般習慣';modal.style.display='flex';});
+    window.openAddPersonal=function(){editingId=null;document.getElementById('modal-title').textContent='新增習慣';document.getElementById('modal-submit').textContent='新增';document.getElementById('hf-name').value='';document.getElementById('hf-type').value='personal';document.getElementById('hf-cat').value='一般習慣';modal.style.display='flex';};
+    window.openEdit=function(id){const h=getHabits().find(x=>x.id===id);if(!h)return;editingId=id;document.getElementById('modal-title').textContent='編輯習慣';document.getElementById('modal-submit').textContent='儲存';document.getElementById('hf-name').value=h.name;document.getElementById('hf-type').value=h.type;document.getElementById('hf-cat').value=h.category;modal.style.display='flex';};
+    window.openDelete=function(id){deletingId=id;delModal.style.display='flex';};
+
+    document.getElementById('del-confirm').addEventListener('click',async()=>{
+      if(deletingId!==null){await SB.deleteHabit(deletingId);await reloadHabits();render();}
+      delModal.style.display='none';deletingId=null;
+    });
+
+    document.getElementById('habit-form').addEventListener('submit',async function(e){
+      e.preventDefault();
+      const name=document.getElementById('hf-name').value.trim(),type=document.getElementById('hf-type').value,cat=document.getElementById('hf-cat').value;
+      if(!name)return;
+      if(editingId!==null){await SB.updateHabit(editingId,name,type,cat);}
+      else{await SB.addHabit(name,type,cat);}
+      await reloadHabits();modal.style.display='none';editingId=null;render();
+    });
+
+    document.getElementById('modal-close').addEventListener('click',()=>{modal.style.display='none';});
+    document.getElementById('modal-cancel').addEventListener('click',()=>{modal.style.display='none';});
+    document.getElementById('del-cancel').addEventListener('click',()=>{delModal.style.display='none';});
+
+    appInit();
+  </script>  </div> <script>
+    // Auto-hide guard on login page
+    if(window.location.pathname==='/') document.getElementById('auth-guard').style.display='none';
+  </script> </body> </html>

@@ -1,0 +1,181 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #f5efe6;
+  --color-card: #ffffff;
+  --color-dark: #4a3f35;
+  --color-gray-text: #9e8e7e;
+  --color-gray-mid: #e2d6c8;
+  --color-gray-light: #f0e8dc;
+  --color-me: #c4a87a;
+  --color-me-light: #f0e6d4;
+  --color-bf: #8b7355;
+  --color-bf-light: #ddd0c0;
+  --color-green: #8e9e7c;
+  --color-green-light: #e8eddf;
+  --color-red: #c4756a;
+  --color-streak: #c4a87a;
+  --color-accent: #b89b6a;
+  --color-warm-section: #ece3d5;
+  --color-warm-dark: #d8cab6;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  font-family: 'Noto Sans TC', 'Hiragino Sans', -apple-system, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-dark);
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+}
+
+h1, h2, h3, h4, .serif {
+  font-family: 'Cormorant Garamond', 'Noto Sans TC', Georgia, serif;
+  letter-spacing: 0.02em;
+}
+
+/* Buttons */
+.btn-gradient {
+  display: block; width: 100%; padding: 14px 24px;
+  background: linear-gradient(135deg, var(--color-me), var(--color-accent));
+  color: white; border: none; border-radius: 24px;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  text-align: center; letter-spacing: 0.05em;
+  box-shadow: 0 2px 12px rgba(196,168,122,0.25);
+  transition: all 0.3s ease;
+}
+.btn-gradient:hover { box-shadow: 0 4px 16px rgba(196,168,122,0.35); transform: translateY(-1px); }
+.btn-outline {
+  padding: 12px 24px; border-radius: 24px;
+  border: 1.5px solid var(--color-gray-mid); background: white;
+  color: var(--color-dark); font-weight: 600; cursor: pointer; font-size: 14px;
+  letter-spacing: 0.03em; transition: all 0.3s ease;
+}
+.btn-outline:hover { border-color: var(--color-me); }
+
+/* Form */
+.form-input {
+  width: 100%; padding: 12px 16px; border-radius: 16px;
+  border: 1.5px solid var(--color-gray-mid); background: var(--color-gray-light);
+  font-size: 14px; color: var(--color-dark); outline: none;
+  transition: border-color 0.3s;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+.form-input:focus { border-color: var(--color-me); background: white; }
+.form-select {
+  width: 100%; padding: 12px 16px; border-radius: 16px;
+  border: 1.5px solid var(--color-gray-mid); background: var(--color-gray-light);
+  font-size: 14px; color: var(--color-dark); outline: none;
+  appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239e8e7e' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 16px center;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+
+/* Cards */
+.habit-card {
+  background: var(--color-card); border-radius: 16px; padding: 14px 16px;
+  box-shadow: 0 1px 6px rgba(74,63,53,0.05);
+  border: 1px solid rgba(226,214,200,0.5);
+}
+
+.person-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 0;
+}
+
+/* Check buttons */
+.check-btn {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: bold; font-size: 13px; cursor: pointer; border: none;
+  flex-shrink: 0; transition: all 0.2s ease;
+}
+.check-done { background: var(--color-green); color: white; }
+.check-none { background: var(--color-gray-mid); color: var(--color-gray-text); }
+
+/* Modal */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(74,63,53,0.35);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; backdrop-filter: blur(4px);
+  padding: 24px;
+}
+.modal-content {
+  background: white; border-radius: 24px; padding: 28px 24px 32px;
+  width: 100%; max-width: 400px;
+}
+
+/* Bottom nav */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px; background: white;
+  border-top: 1px solid var(--color-gray-mid);
+  display: flex; z-index: 50;
+}
+.bottom-nav a {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 2px; padding: 10px 0; font-size: 11px; text-decoration: none;
+  color: var(--color-gray-text); font-weight: 500;
+  letter-spacing: 0.05em;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+.bottom-nav a.active { color: var(--color-me); font-weight: 700; }
+
+/* Add habit button */
+.add-habit-btn {
+  width: 100%; padding: 20px 16px; border: 2px dashed var(--color-gray-mid);
+  border-radius: 16px; background: transparent; color: var(--color-gray-text);
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: all 0.3s ease; letter-spacing: 0.03em;
+}
+.add-habit-btn:hover { border-color: var(--color-me); color: var(--color-me); }
+
+/* Tabs */
+.tab-active {
+  background: linear-gradient(135deg, var(--color-me), var(--color-accent));
+  color: white;
+}
+.tab-inactive { background: transparent; color: var(--color-gray-text); }
+
+/* Motto banner */
+.motto-banner {
+  background: var(--color-warm-section); border-radius: 20px;
+  padding: 18px 24px; text-align: center;
+  color: var(--color-accent); font-weight: 600;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px; letter-spacing: 0.05em;
+}
+
+/* Cover image with zoom/pan */
+.cover-container {
+  width: 100%; height: 160px; border-radius: 20px;
+  overflow: hidden; position: relative; cursor: pointer;
+  background: linear-gradient(135deg, var(--color-me-light), var(--color-warm-section));
+}
+.cover-container img {
+  position: absolute; left: 0; top: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  cursor: grab; user-select: none; -webkit-user-select: none;
+  transform-origin: center center;
+  transition: none;
+}
+.cover-container img:active { cursor: grabbing; }
+.cover-controls {
+  position: absolute; bottom: 8px; right: 8px; z-index: 10;
+  display: flex; gap: 6px; align-items: center;
+}
+.cover-controls button, .cover-controls label {
+  background: rgba(74,63,53,0.6); color: white; border: none;
+  border-radius: 12px; padding: 4px 10px; font-size: 12px;
+  cursor: pointer; backdrop-filter: blur(4px);
+}
+.cover-zoom {
+  width: 80px; height: 4px; accent-color: var(--color-me);
+}
+
+/* Calendar */
+.cal-header { font-size: 11px; color: var(--color-gray-text); font-weight: 600; padding: 4px 0; text-align: center; letter-spacing: 0.05em; }

@@ -1,0 +1,228 @@
+<!DOCTYPE html><html lang="zh-Hant"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><title>習慣詳情</title><script src="/sb.js"></script><link rel="stylesheet" href="/_astro/Layout.c1_6T_iV.css"></head> <body class="bg-bg"> <div id="auth-guard" style="position:fixed;inset:0;background:var(--color-bg,#f5efe6);z-index:9999;display:flex;align-items:center;justify-content:center"> <span style="color:var(--color-gray-text,#9e8e7e);font-size:14px">載入中...</span> </div> <div class="app-container">  <div class="flex items-center justify-between px-5 py-3.5 bg-card border-b border-gray-mid"> <h1 class="text-lg font-bold text-dark">習慣追蹤</h1> <button onclick="SB.signOut()" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-mid bg-transparent text-gray-text cursor-pointer" style="font-family:'Noto Sans TC',sans-serif">登出</button> </div> <div class="px-4 pt-4 pb-24"> <div class="flex items-center gap-3 mb-5"> <a href="/habits" class="text-2xl text-dark no-underline">‹</a> <h2 id="habit-title" class="text-xl font-bold text-dark"></h2> </div> <div id="cover-wrap" class="cover-container mb-5"> <img id="cover-img" draggable="false" style="display:none"> <span id="cover-text" class="text-gray-text text-sm absolute inset-0 flex items-center justify-center z-5">📷 添加封面圖片</span> <div class="cover-controls"> <input type="range" min="100" max="300" value="100" class="cover-zoom" id="cover-zoom"> <label class="cursor-pointer">📷<input type="file" accept="image/*" id="cover-file" class="hidden"></label> <button id="cover-url-btn">🔗</button> </div> </div> <button id="add-record-btn" class="btn-gradient mb-4 flex items-center justify-center gap-2">+ <span id="add-record-text">新增記錄</span></button> <h3 id="records-title" class="text-sm font-bold text-dark mb-3" style="font-family:'Noto Sans TC',sans-serif"></h3> <div id="records-container" class="space-y-3"></div> </div> <nav class="bottom-nav"> <a href="/habits"><span class="text-lg">☰</span><span>習慣</span></a> <a href="/calendar"><span class="text-lg">📅</span><span>月曆</span></a> </nav> <div id="record-modal" class="modal-backdrop" style="display:none"> <div class="modal-content" style="max-height:85vh;overflow-y:auto"> <div class="flex items-center justify-between mb-5"> <h2 id="rm-title" class="text-lg font-bold">新增記錄</h2> <button onclick="closeRM()" class="text-2xl text-gray-text bg-transparent border-none cursor-pointer">×</button> </div> <form id="record-form" class="space-y-4"> <div><label class="block text-sm font-semibold mb-1">日期</label><input type="date" id="rf-date" class="form-input"></div> <div id="record-fields"></div> <div class="flex gap-3 pt-2"> <button type="submit" class="btn-gradient flex-1">儲存</button> <button type="button" onclick="closeRM()" class="btn-outline flex-1">取消</button> </div> </form> </div> </div> <script>
+    const habitId=parseInt(new URLSearchParams(window.location.search).get('id'));
+    let editRecordId=null,recordsCache=[],habit=null;
+
+    async function appInit(){
+      if(SB.initFromCache()){
+        document.getElementById('auth-guard').style.display='none';
+      }
+      const ok=await SB.init();
+      if(!ok||!SB.myProfile){window.location.href='/';return;}
+      const habits=await SB.loadHabits();
+      habit=habits.find(h=>h.id===habitId);
+      if(!habit){document.getElementById('habit-title').textContent='找不到';return;}
+      document.getElementById('habit-title').textContent=habit.name;
+      const tpl=getTpl(habit.category);
+      const labels={reading:['新增閱讀記錄','閱讀記錄'],learning:['新增學習記錄','學習記錄'],exercise:['新增運動記錄','運動記錄'],gratitude:['新增感恩紀錄','感恩紀錄'],general:['新增記錄','記錄']};
+      document.getElementById('add-record-text').textContent=labels[tpl][0];
+      document.getElementById('records-title').textContent=labels[tpl][1];
+      initCover();
+      await reloadRecords();
+      document.getElementById('auth-guard').style.display='none';
+      renderRecords();
+    }
+
+    function myEmoji(){return SB.myProfile?.emoji||'👩';}
+    function bfEmoji(){return SB.partnerProfile?.emoji||'👦';}
+    function partnerLabel(){return SB.partnerProfile?.emoji==='👩'?'女友':'男友';}
+    function displayName(n){
+      if(n==='我')return SB.myProfile?.display_name||'我';
+      if(n==='男友'||n==='女友')return SB.partnerProfile?.display_name||partnerLabel();
+      return n;
+    }
+
+    function getTpl(cat){
+      if(cat==='學習')return'learning';
+      if(cat==='運動')return'exercise';
+      if(cat==='感恩紀錄')return'gratitude';
+      if(cat==='飲食')return'general';
+      return'general';
+    }
+
+    let checkInsCache=[];
+    async function reloadRecords(){
+      const result=await SB.loadRecords(habitId);
+      const records=result.records||[];
+      checkInsCache=result.checkIns||[];
+      recordsCache=records.map(r=>{
+        const isMe=r.user_id===SB.myId;
+        const content=typeof r.content==='string'?JSON.parse(r.content):r.content||{};
+        return{id:r.id,date:r.date,user_id:r.user_id,userName:isMe?displayName('我'):displayName('男友'),userEmoji:isMe?myEmoji():bfEmoji(),isMe,...content};
+      });
+    }
+    function isCheckedIn(date,userId){
+      return checkInsCache.some(c=>c.habit_id===habitId&&c.user_id===userId&&c.date===date&&c.done);
+    }
+
+    function initCover(){
+      const imgEl=document.getElementById('cover-img'),zoomEl=document.getElementById('cover-zoom');
+      let scale=1,posX=0,posY=0,dragging=false,startX=0,startY=0,lx=0,ly=0;
+      function apply(){imgEl.style.transform='scale('+scale+') translate('+posX+'px,'+posY+'px)';}
+      zoomEl.addEventListener('input',function(e){e.stopPropagation();scale=parseInt(this.value)/100;apply();});
+      imgEl.addEventListener('mousedown',function(e){e.preventDefault();e.stopPropagation();dragging=true;startX=e.clientX;startY=e.clientY;lx=posX;ly=posY;});
+      document.addEventListener('mousemove',function(e){if(!dragging)return;posX=lx+(e.clientX-startX)/scale;posY=ly+(e.clientY-startY)/scale;apply();});
+      document.addEventListener('mouseup',function(){dragging=false;});
+      imgEl.addEventListener('touchstart',function(e){dragging=true;startX=e.touches[0].clientX;startY=e.touches[0].clientY;lx=posX;ly=posY;},{passive:true});
+      document.addEventListener('touchmove',function(e){if(!dragging)return;posX=lx+(e.touches[0].clientX-startX)/scale;posY=ly+(e.touches[0].clientY-startY)/scale;apply();},{passive:true});
+      document.addEventListener('touchend',function(){dragging=false;});
+      const DETAIL_COVER_ID='habit-'+habitId;
+      let saveTimer=null;
+      function debounceSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{SB.saveCover(DETAIL_COVER_ID,imgEl.src,Math.round(scale*100),Math.round(posX),Math.round(posY));},800);}
+      document.addEventListener('mouseup',function(){if(dragging){dragging=false;debounceSave();}});
+      document.addEventListener('touchend',function(){if(dragging){dragging=false;debounceSave();}});
+      zoomEl.addEventListener('input',function(){debounceSave();});
+      function setCover(src){imgEl.src=src;imgEl.style.display='block';document.getElementById('cover-text').style.display='none';scale=1;posX=0;posY=0;zoomEl.value=100;apply();SB.saveCover(DETAIL_COVER_ID,src,100,0,0);}
+      document.getElementById('cover-file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setCover(ev.target.result);r.readAsDataURL(f);});
+      document.getElementById('cover-url-btn').addEventListener('click',()=>{const url=prompt('輸入圖片網址：');if(url)setCover(url);});
+      // Load from DB
+      (async()=>{
+        const c=await SB.loadCover(DETAIL_COVER_ID);
+        if(c&&c.image_url){imgEl.src=c.image_url;imgEl.style.display='block';document.getElementById('cover-text').style.display='none';scale=(c.zoom||100)/100;posX=c.pos_x||0;posY=c.pos_y||0;zoomEl.value=c.zoom||100;apply();}
+      })();
+    }
+
+    function renderRecords(){
+      const records=recordsCache,tpl=getTpl(habit.category);
+      const c=document.getElementById('records-container');
+      if(!records.length){c.innerHTML='<p class="text-center text-gray-text py-8">還沒有記錄</p>';return;}
+      c.innerHTML=records.map(r=>{
+        let body='';
+        const dateDisplay=SB.formatDate(r.date);
+        if(tpl==='reading'){
+          body=`${r.book?`<div class="flex items-center gap-2 mb-2"><span style="color:var(--color-me)">📖</span><span class="font-bold text-sm">${r.book}</span></div>`:''}
+            ${r.quote?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-me-light);border-left:3px solid var(--color-me)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-accent)">✨ 金句</p><p class="text-sm">"${r.quote}"</p></div>`:''}
+            ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-bf)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-bf)">💬 閱讀心得</p><p class="text-sm">${r.note}</p></div>`:''}`;
+        }else if(tpl==='learning'){
+          body=`${r.words?.length?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-green-light);border-left:3px solid var(--color-green)"><p class="text-xs font-semibold mb-1" style="color:var(--color-green)">習得例句或單字</p>${r.words.map((w,i)=>`<p class="text-sm mb-0.5"><span style="color:var(--color-me);font-weight:600">${i+1}.</span>&nbsp;&nbsp;${w}</p>`).join('')}</div>`:''}
+            ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-xs font-semibold mb-0.5">學習筆記</p><p class="text-sm">${r.note}</p></div>`:''}`;
+        }else if(tpl==='exercise'){
+          body=`<div class="rounded-lg p-3 mb-2" style="background:#f0ebe4;border-left:3px solid var(--color-red)"><p class="text-sm"><b>類型：</b>${r.type||'-'}</p><p class="text-sm"><b>時長：</b>${r.duration||'-'}</p></div>
+            ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-sm">${r.note}</p></div>`:''}`;
+        }else if(tpl==='gratitude'){
+          body=`${r.items?.length?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-me-light);border-left:3px solid var(--color-me)"><p class="text-xs font-semibold mb-1" style="color:var(--color-accent)">🙏 感恩的事</p>${r.items.map((item,idx)=>`<p class="text-sm mb-0.5"><span style="color:var(--color-me);font-weight:600">${idx+1}.</span>&nbsp;&nbsp;${item}</p>`).join('')}</div>`:''}
+            ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-xs font-semibold mb-0.5">備註</p><p class="text-sm">${r.note}</p></div>`:''}`;
+        }else{
+          body=r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-sm">${r.note}</p></div>`:'';
+        }
+        const userBadge=habit.type==='shared'?`<span style="font-size:13px;margin-left:8px">${r.userEmoji} ${r.userName}</span>`:'';
+        const editBtns=r.isMe?`<button onclick="openEditR(${r.id})" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--color-gray-text)">✏️</button><button onclick="deleteR(${r.id})" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--color-red)">🗑️</button>`:'';
+        const checked=isCheckedIn(r.date,r.user_id);
+        const checkBtn=r.isMe?`<button class="check-btn ${checked?'check-done':'check-none'}" onclick="toggleRecordCheck('${r.date}')" style="flex-shrink:0">${checked?'✓':'✕'}</button>`:`<span class="check-btn ${checked?'check-done':'check-none'}" style="flex-shrink:0;opacity:0.4;cursor:default">${checked?'✓':'✕'}</span>`;
+        return`<div class="habit-card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">${checkBtn}<span style="font-size:14px;color:var(--color-gray-text);flex:1">📅 ${dateDisplay}${userBadge}</span><div style="display:flex;gap:8px">${editBtns}</div></div>${body}</div>`;
+      }).join('');
+    }
+
+    // ===== Form fields =====
+    function getFields(tpl,r){
+      r=r||{};
+      if(tpl==='gratitude'){
+        const items=r.items||[];
+        const rowCount=Math.max(items.length+3,5);
+        let lines='';
+        for(let i=0;i<rowCount;i++){
+          lines+=`<div class="flex items-center gap-2 mb-1 gratitude-row"><span class="text-sm font-bold" style="color:var(--color-me);min-width:24px">${i+1}.</span><input type="text" data-gratitude-input value="${items[i]||''}" class="form-input flex-1" style="padding:8px 12px" placeholder="感恩的事..." /></div>`;
+        }
+        return`<div><label class="block text-sm font-semibold mb-1">🙏 感恩的事</label><div id="gratitude-list" class="rounded-xl border p-3 max-h-[300px] overflow-y-auto" style="border-color:var(--color-me)">${lines}</div><div class="flex items-center justify-between mt-1"><p id="item-count" class="text-xs" style="color:var(--color-green)">已輸入 ${items.filter(x=>x).length} 個</p><button type="button" onclick="addGratitudeRow()" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增一行</button></div></div>
+        <div><label class="block text-sm font-semibold mb-1">備註</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
+      }
+      if(tpl==='learning'){
+        const words=r.words||[];
+        const rowCount=Math.max(words.length+3,10);
+        let lines='';
+        for(let i=0;i<rowCount;i++)lines+=`<div class="flex items-center gap-2 mb-1 learning-row"><span class="text-sm font-bold" style="color:var(--color-me);min-width:28px">${i+1}.</span><input type="text" data-word-input value="${words[i]||''}" class="form-input flex-1" style="padding:8px 12px" /></div>`;
+        return`<div><label class="block text-sm font-semibold mb-1">習得例句或單字</label><div id="word-list" class="rounded-xl border p-3 max-h-[250px] overflow-y-auto" style="border-color:var(--color-me)">${lines}</div><div class="flex items-center justify-between mt-1"><p id="word-count" class="text-xs" style="color:var(--color-green)">已輸入 ${words.filter(x=>x).length} 個</p><button type="button" onclick="addWordRow()" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增一行</button></div></div>
+        <div><label class="block text-sm font-semibold mb-1">學習筆記</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
+      }
+      if(tpl==='reading')return`<div><label class="block text-sm font-semibold mb-1">書名</label><input id="rf-book" value="${r.book||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">金句</label><input id="rf-quote" value="${r.quote||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">閱讀心得</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
+      if(tpl==='exercise')return`<div><label class="block text-sm font-semibold mb-1">運動類型</label><input id="rf-type" value="${r.type||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">時長</label><input id="rf-duration" value="${r.duration||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">備註</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
+      return`<div><label class="block text-sm font-semibold mb-1">備註</label><textarea id="rf-note" rows="3" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
+    }
+
+    window.addGratitudeRow=function(){
+      const list=document.getElementById('gratitude-list');
+      const count=list.querySelectorAll('.gratitude-row').length;
+      const div=document.createElement('div');
+      div.className='flex items-center gap-2 mb-1 gratitude-row';
+      div.innerHTML=`<span class="text-sm font-bold" style="color:var(--color-me);min-width:24px">${count+1}.</span><input type="text" data-gratitude-input value="" class="form-input flex-1" style="padding:8px 12px" placeholder="感恩的事..." />`;
+      list.appendChild(div);div.querySelector('input').focus();setupEnterNav();updateCounts();
+    };
+    window.addWordRow=function(){
+      const list=document.getElementById('word-list');
+      const count=list.querySelectorAll('.learning-row').length;
+      const div=document.createElement('div');
+      div.className='flex items-center gap-2 mb-1 learning-row';
+      div.innerHTML=`<span class="text-sm font-bold" style="color:var(--color-me);min-width:28px">${count+1}.</span><input type="text" data-word-input value="" class="form-input flex-1" style="padding:8px 12px" />`;
+      list.appendChild(div);div.querySelector('input').focus();setupEnterNav();updateCounts();
+    };
+
+    function updateCounts(){
+      const ic=document.getElementById('item-count');
+      if(ic){let c=0;document.querySelectorAll('[data-gratitude-input]').forEach(el=>{if(el.value.trim())c++;});ic.textContent='已輸入 '+c+' 個';}
+      const wc=document.getElementById('word-count');
+      if(wc){let c=0;document.querySelectorAll('[data-word-input]').forEach(el=>{if(el.value.trim())c++;});wc.textContent='已輸入 '+c+' 個';}
+    }
+    function setupEnterNav(){
+      document.querySelectorAll('[data-gratitude-input],[data-word-input]').forEach((el,idx,all)=>{
+        el.removeEventListener('keydown',el._kh);
+        el._kh=e=>{if(e.key==='Enter'){e.preventDefault();if(idx+1<all.length)all[idx+1].focus();}};
+        el.addEventListener('keydown',el._kh);
+        el.removeEventListener('input',updateCounts);el.addEventListener('input',updateCounts);
+      });
+    }
+
+    function openRM(r){
+      const tpl=getTpl(habit.category);
+      const today=new Date().toISOString().split('T')[0];
+      document.getElementById('rf-date').value=r?.date||today;
+      document.getElementById('record-fields').innerHTML=getFields(tpl,r);
+      document.getElementById('rm-title').textContent=r?'編輯記錄':'新增記錄';
+      document.getElementById('record-modal').style.display='flex';
+      setupEnterNav();
+    }
+
+    window.toggleRecordCheck=async function(date){
+      await SB.toggleCheckIn(habitId,date);
+      const result=await SB.loadRecords(habitId);
+      checkInsCache=result.checkIns||[];
+      renderRecords();
+    };
+
+    window.closeRM=()=>{document.getElementById('record-modal').style.display='none';editRecordId=null;};
+    document.getElementById('add-record-btn').addEventListener('click',()=>{editRecordId=null;openRM(null);});
+    window.openEditR=function(id){
+      editRecordId=id;
+      const r=recordsCache.find(x=>x.id===id);
+      openRM(r);
+    };
+    window.deleteR=async function(id){
+      await SB.deleteRecord(id);
+      await reloadRecords();renderRecords();
+    };
+
+    document.getElementById('record-form').addEventListener('submit',async function(e){
+      e.preventDefault();
+      const tpl=getTpl(habit.category);
+      const dateVal=document.getElementById('rf-date').value;
+      let content={};
+      if(tpl==='reading'){content.book=document.getElementById('rf-book').value;content.quote=document.getElementById('rf-quote').value;content.note=document.getElementById('rf-note').value;}
+      else if(tpl==='learning'){
+        const w=[];document.querySelectorAll('[data-word-input]').forEach(el=>{const v=el.value.trim();if(v)w.push(v);});
+        content.words=w;content.note=document.getElementById('rf-note').value;
+      }else if(tpl==='exercise'){content.type=document.getElementById('rf-type').value;content.duration=document.getElementById('rf-duration').value;content.note=document.getElementById('rf-note').value;}
+      else if(tpl==='gratitude'){
+        const items=[];document.querySelectorAll('[data-gratitude-input]').forEach(el=>{const v=el.value.trim();if(v)items.push(v);});
+        content.items=items;content.note=document.getElementById('rf-note').value;
+      }else{content.note=document.getElementById('rf-note').value;}
+
+      if(editRecordId!==null){await SB.updateRecord(editRecordId,dateVal,content);}
+      else{
+        await SB.addRecord(habitId,dateVal,content);
+      }
+      await reloadRecords();closeRM();renderRecords();
+    });
+
+    appInit();
+  </script>  </div> <script>
+    // Auto-hide guard on login page
+    if(window.location.pathname==='/') document.getElementById('auth-guard').style.display='none';
+  </script> </body> </html>
