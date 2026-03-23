@@ -3,11 +3,12 @@ import Layout from '../layouts/Layout.astro';
 ---
 <Layout title="習慣追蹤">
   <div class="flex items-center justify-between px-5 py-3.5 bg-card border-b border-gray-mid">
-    <div class="flex items-center gap-2 cursor-pointer" onclick="openUserModal()">
-      <span class="w-8 h-8 rounded-full flex items-center justify-center text-sm" style="background:var(--color-me-light);color:var(--color-accent)">👤</span>
+    <h1 class="text-lg font-bold text-dark" style="font-family:'Cormorant Garamond','Noto Sans TC',serif;letter-spacing:0.02em">習慣追蹤</h1>
+    <div class="flex items-center gap-3">
       <span id="user-greeting" class="text-sm font-semibold text-dark"></span>
+      <button onclick="openUserModal()" class="flex items-center justify-center" style="background:none;border:none;cursor:pointer;width:28px;height:28px;color:var(--color-accent)" id="user-icon-btn"></button>
+      <button onclick="SB.signOut()" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-mid bg-transparent text-gray-text cursor-pointer" style="font-family:'Noto Sans TC',sans-serif">登出</button>
     </div>
-    <button onclick="SB.signOut()" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-mid bg-transparent text-gray-text cursor-pointer" style="font-family:'Noto Sans TC',sans-serif">登出</button>
   </div>
 
   <div class="px-4 pt-4">
@@ -166,7 +167,7 @@ import Layout from '../layouts/Layout.astro';
       if(n==='男友'||n==='女友')return SB.partnerProfile?.display_name||partnerLabel();
       return n;
     }
-    function updateGreeting(){document.getElementById('user-greeting').textContent=displayName('我')+'，歡迎 ♡';}
+    function updateGreeting(){document.getElementById('user-greeting').textContent=displayName('我');}
 
     let customQuotes=[];
     async function loadQuotes(){
