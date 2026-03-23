@@ -4,6 +4,11 @@ import bcrypt from 'bcryptjs';
 
 const JWT_SECRET = 'habits-app-secret-2026';
 
+// Force pg to return DATE as string (YYYY-MM-DD) instead of JS Date object
+pg.types.setTypeParser(1082, val => val); // DATE
+pg.types.setTypeParser(1114, val => val); // TIMESTAMP
+pg.types.setTypeParser(1184, val => val); // TIMESTAMPTZ
+
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL || 'postgresql://root:I9t6lo83apJd7EvNB1nP0RfAwy45K2br@hnd1.clusters.zeabur.com:27116/zeabur',
   max: 5,
