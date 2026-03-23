@@ -118,12 +118,19 @@ h1, h2, h3, h4, .serif {
 }
 .bottom-nav a {
   flex: 1; display: flex; flex-direction: column; align-items: center;
-  gap: 2px; padding: 10px 0; font-size: 11px; text-decoration: none;
+  gap: 2px; padding: 10px 0 8px; font-size: 11px; text-decoration: none;
   color: var(--color-gray-text); font-weight: 500;
   letter-spacing: 0.05em;
   font-family: 'Noto Sans TC', sans-serif;
+  position: relative; transition: color 0.2s;
 }
-.bottom-nav a.active { color: var(--color-me); font-weight: 700; }
+.bottom-nav a.active { color: var(--color-accent); font-weight: 700; }
+.bottom-nav a.active::before {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 32px; height: 3px; border-radius: 0 0 3px 3px;
+  background: linear-gradient(135deg, var(--color-me), var(--color-accent));
+}
+.bottom-nav .nav-icon { font-size: 18px; line-height: 1; }
 
 /* Add habit button */
 .add-habit-btn {

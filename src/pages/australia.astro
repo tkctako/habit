@@ -3,39 +3,30 @@ import Layout from '../layouts/Layout.astro';
 ---
 <Layout title="澳洲準備">
   <div class="flex items-center justify-between px-5 py-3.5 bg-card border-b border-gray-mid">
-    <h1 class="text-lg font-bold text-dark">習慣追蹤</h1>
-    <button onclick="SB.signOut()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--color-gray-text)">⇥</button>
+    <h1 class="text-lg font-bold text-dark" style="font-family:'Cormorant Garamond','Noto Sans TC',serif;letter-spacing:0.02em">🌴 澳洲準備</h1>
+    <button onclick="SB.signOut()" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-mid bg-transparent text-gray-text cursor-pointer" style="font-family:'Noto Sans TC',sans-serif">登出</button>
   </div>
 
-  <div class="px-4 pt-6 pb-24">
+  <div class="px-4 pt-5 pb-24">
+    <!-- Subtitle -->
     <div class="text-center mb-5">
-      <h2 style="font-size:22px;font-weight:800">🇦🇺 澳洲打工度假準備</h2>
-      <p class="text-gray-text text-sm mt-1">一起規劃我們的澳洲冒險之旅</p>
-    </div>
-
-    <!-- Cover -->
-    <div id="au-cover" class="rounded-2xl mb-5 text-center" style="background:linear-gradient(135deg,#f8e8f0,#fce4ec);min-height:120px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative">
-      <img id="au-cover-img" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none" />
-      <label class="cursor-pointer" style="color:var(--color-accent);font-size:14px;z-index:2">
-        <span id="au-cover-text">📷 添加封面圖片</span>
-        <input type="file" accept="image/*" id="au-cover-file" class="hidden" />
-      </label>
+      <p class="text-sm" style="color:var(--color-gray-text)">一起規劃我們的澳洲冒險之旅 ✈️</p>
     </div>
 
     <!-- Progress -->
-    <div id="progress-card" class="rounded-2xl p-5 mb-5" style="background:linear-gradient(135deg,#fff9e6,#fff3cd);border:1px solid #f0e0a0">
+    <div id="progress-card" class="rounded-2xl p-5 mb-5" style="background:var(--color-me-light);border:1px solid var(--color-gray-mid)">
       <div class="flex items-center justify-between mb-3">
-        <span style="font-weight:700;color:#e67e22;font-size:15px">整體進度</span>
-        <span id="au-pct" style="font-weight:800;font-size:24px;color:#e67e22">0%</span>
+        <span style="font-weight:700;color:var(--color-accent);font-size:15px">整體進度</span>
+        <span id="au-pct" style="font-weight:800;font-size:24px;color:var(--color-accent);font-family:'Cormorant Garamond',serif">0%</span>
       </div>
-      <div class="w-full h-2.5 rounded-full" style="background:#f0e0a0">
-        <div id="au-bar" class="h-2.5 rounded-full transition-all" style="background:#e67e22;width:0%"></div>
+      <div class="w-full h-2.5 rounded-full" style="background:var(--color-warm-dark)">
+        <div id="au-bar" class="h-2.5 rounded-full transition-all" style="background:var(--color-me);width:0%"></div>
       </div>
-      <p id="au-count" class="text-center text-sm mt-3" style="color:#b8860b">✓ 0 / 0 項目完成</p>
+      <p id="au-count" class="text-center text-sm mt-3" style="color:var(--color-bf)">✓ 0 / 0 項目完成</p>
     </div>
 
     <!-- Add button -->
-    <button id="au-add-btn" class="w-full py-3.5 rounded-2xl text-white font-bold text-base cursor-pointer border-none mb-5" style="background:linear-gradient(135deg,#f39c12,#e67e22)">＋ 新增準備事項</button>
+    <button id="au-add-btn" class="add-habit-btn mb-5">＋ 新增準備事項</button>
 
     <!-- Category tabs -->
     <div id="au-tabs" class="flex gap-2 mb-5 overflow-x-auto pb-2" style="scrollbar-width:none"></div>
@@ -50,9 +41,9 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <nav class="bottom-nav">
-    <a href="/habits"><span class="text-lg">☰</span><span>習慣</span></a>
-    <a href="/calendar"><span class="text-lg">📅</span><span>月曆</span></a>
-    <a href="/australia" class="active"><span class="text-lg">🌴</span><span>澳洲</span></a>
+    <a href="/habits"><span class="nav-icon">☰</span><span>習慣</span></a>
+    <a href="/calendar"><span class="nav-icon">📅</span><span>月曆</span></a>
+    <a href="/australia" class="active"><span class="nav-icon">🌴</span><span>澳洲</span></a>
   </nav>
 
   <!-- Add/Edit Modal -->
@@ -70,10 +61,10 @@ import Layout from '../layouts/Layout.astro';
         </div>
         <div><label class="block text-sm font-semibold mb-1">說明描述</label><textarea id="af-desc" class="form-input" rows="3" placeholder="詳細說明這個準備事項..." style="resize:vertical"></textarea></div>
         <div><label class="block text-sm font-semibold mb-1">參考連結或資訊</label><input type="text" id="af-ref" class="form-input" placeholder="網址、地址、電話或其他參考資訊..." /></div>
-        <div><label class="block text-sm font-semibold mb-1">注意事項</label><input type="text" id="af-notes" class="form-input" placeholder="需要注意的事項..." /></div>
+        <div><label class="block text-sm font-semibold mb-1">注意事項 / 備註</label><textarea id="af-notes" class="form-input" rows="2" placeholder="重要提醒、費用、所需時間等注意事項..." style="resize:vertical"></textarea></div>
         <div class="flex gap-3 pt-2">
-          <button type="button" onclick="document.getElementById('au-modal').style.display='none'" class="btn-outline flex-1">取消</button>
           <button type="submit" id="af-submit" class="btn-gradient flex-1">新增</button>
+          <button type="button" onclick="document.getElementById('au-modal').style.display='none'" class="btn-outline flex-1">取消</button>
         </div>
       </form>
     </div>
@@ -94,20 +85,11 @@ import Layout from '../layouts/Layout.astro';
   <script is:inline>
     let auItems=[],auFilter='全部',editId=null,deleteId=null;
 
-    const CAT_ICONS={'簽證文件':'📋','行前準備':'🌐','工作準備':'🏢','住宿安排':'🏠','交通規劃':'✈️','其他事項':'•••'};
-    const PRIORITY_COLORS={'高優先':'#e74c3c','中優先':'#f39c12','低優先':'#27ae60'};
+    const CAT_ICONS={'簽證文件':'📋','行前準備':'🧳','工作準備':'💼','住宿安排':'🏠','交通規劃':'✈️','其他事項':'📌'};
+    const PRIORITY_COLORS={'高優先':'var(--color-red)','中優先':'var(--color-me)','低優先':'var(--color-green)'};
 
-    // Cover
-    document.getElementById('au-cover-file').addEventListener('change',e=>{
-      const f=e.target.files[0];if(!f)return;
-      const r=new FileReader();
-      r.onload=ev=>{
-        const img=document.getElementById('au-cover-img');
-        img.src=ev.target.result;img.style.display='block';
-        document.getElementById('au-cover-text').style.display='none';
-      };
-      r.readAsDataURL(f);
-    });
+    const EDIT_SVG=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    const DEL_SVG=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
 
     async function loadItems(){
       auItems=await SB.loadAustralia();
@@ -126,60 +108,55 @@ import Layout from '../layouts/Layout.astro';
         const count=c==='全部'?total:auItems.filter(i=>i.category===c).length;
         const doneCount=c==='全部'?done:auItems.filter(i=>i.category===c&&i.done).length;
         const isActive=auFilter===c;
-        const style=isActive
-          ?'background:#e67e22;color:white;border:none;font-weight:700;'
-          :'background:var(--color-gray-light);color:var(--color-gray-text);border:1px solid var(--color-gray-mid);font-weight:600;';
+        const bg=isActive?'background:linear-gradient(135deg,var(--color-me),var(--color-accent));color:white;border:none;font-weight:700;':'background:var(--color-card);color:var(--color-gray-text);border:1px solid var(--color-gray-mid);font-weight:600;';
         const icon=c==='全部'?'':CAT_ICONS[c]+' ';
-        return`<button onclick="setAuFilter('${c}')" style="${style}padding:6px 14px;border-radius:99px;font-size:13px;white-space:nowrap;cursor:pointer;flex-shrink:0">${icon}${c} ${doneCount}/${count}</button>`;
+        return`<button onclick="setAuFilter('${c}')" style="${bg}padding:6px 14px;border-radius:99px;font-size:12px;white-space:nowrap;cursor:pointer;flex-shrink:0;font-family:'Noto Sans TC',sans-serif">${icon}${c} ${doneCount}/${count}</button>`;
       }).join('');
 
       // Items
       const filtered=auFilter==='全部'?auItems:auItems.filter(i=>i.category===auFilter);
       document.getElementById('au-items').innerHTML=filtered.map(item=>{
-        const pColor=PRIORITY_COLORS[item.priority]||'#f39c12';
+        const pColor=PRIORITY_COLORS[item.priority]||'var(--color-me)';
         const catIcon=CAT_ICONS[item.category]||'📋';
-        const borderColor=item.done?'#27ae60':'var(--color-gray-mid)';
-        const bgColor=item.done?'#f0faf0':'var(--color-card)';
-        return`<div class="rounded-2xl p-4 mb-4 shadow-sm" style="border:1px solid ${borderColor};background:${bgColor}">
-          <div style="display:flex;align-items:start;gap:12px;margin-bottom:10px">
-            <div style="width:40px;height:40px;border-radius:12px;background:#fff3cd;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${catIcon}</div>
-            <div style="flex:1">
-              <span style="font-size:15px;font-weight:700">${item.title}</span>
-              ${item.done?' ✅':''}
+        return`<div class="habit-card mb-3.5" style="${item.done?'border-left:3px solid var(--color-green);background:var(--color-green-light)':''}">
+          <div style="display:flex;align-items:start;gap:12px">
+            <button onclick="toggleAuItem(${item.id})" class="check-btn ${item.done?'check-done':'check-none'}" style="margin-top:2px;flex-shrink:0;width:28px;height:28px;font-size:12px">${item.done?'✓':''}</button>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span style="font-size:15px;font-weight:700;${item.done?'text-decoration:line-through;opacity:0.6':''}">${item.title}</span>
+                <span style="font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;color:white;background:${pColor}">${item.priority}</span>
+              </div>
+              <div style="margin-top:4px;font-size:12px;color:var(--color-gray-text)">${catIcon} ${item.category}</div>
             </div>
-            <button onclick="openAuEdit(${item.id})" style="background:none;border:none;cursor:pointer;font-size:16px;color:#3498db">✏️</button>
-            <button onclick="openAuDelete(${item.id})" style="background:none;border:none;cursor:pointer;font-size:16px;color:#e74c3c">🗑️</button>
+            <div style="display:flex;gap:6px;flex-shrink:0;margin-top:2px">
+              <button onclick="openAuEdit(${item.id})" style="background:none;border:none;cursor:pointer;padding:4px">${EDIT_SVG}</button>
+              <button onclick="openAuDelete(${item.id})" style="background:none;border:none;cursor:pointer;padding:4px">${DEL_SVG}</button>
+            </div>
           </div>
-          <div style="margin-left:52px">
-            <span style="font-size:12px;font-weight:600;padding:2px 10px;border-radius:99px;color:white;background:${pColor}">${item.priority}</span>
-          </div>
-          ${item.description?`<div style="margin:12px 0 0 52px;padding:10px 14px;border-radius:10px;background:var(--color-gray-light);font-size:14px;color:var(--color-dark)">${item.description}</div>`:''}
-          ${item.reference?`<div style="margin:10px 0 0 52px;padding:10px 14px;border-radius:10px;background:#e8f4fd;font-size:13px"><span style="font-weight:600;color:#e74c3c">📌 參考資訊</span><br/><span style="color:#2980b9;word-break:break-all">${item.reference.startsWith('http')?`<a href="${item.reference}" target="_blank" style="color:#2980b9">${item.reference}</a>`:item.reference}</span></div>`:''}
-          ${item.notes?`<div style="margin:10px 0 0 52px;padding:10px 14px;border-radius:10px;background:#fff9e6;font-size:13px"><span style="font-weight:600;color:#b8860b">💡 注意事項</span><br/>${item.notes}</div>`:''}
-          <div style="margin-top:12px;margin-left:52px">
-            <button onclick="toggleAuItem(${item.id})" style="width:100%;padding:10px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;border:none;${item.done?'background:#27ae60;color:white':'background:var(--color-gray-light);color:var(--color-gray-text)'}">${item.done?'☑️ 已完成':'☐ 標記為完成'}</button>
-          </div>
+          ${item.description?`<div style="margin:10px 0 0 40px;padding:10px 14px;border-radius:12px;background:var(--color-gray-light);font-size:13px;color:var(--color-dark);line-height:1.6">${item.description}</div>`:''}
+          ${item.reference?`<div style="margin:8px 0 0 40px;padding:10px 14px;border-radius:12px;background:var(--color-me-light);font-size:13px"><span style="font-weight:600;color:var(--color-accent)">🔗 參考</span><br/><span style="color:var(--color-bf);word-break:break-all">${item.reference.startsWith('http')?`<a href="${item.reference}" target="_blank" style="color:var(--color-bf);text-decoration:underline">${item.reference}</a>`:item.reference}</span></div>`:''}
+          ${item.notes?`<div style="margin:8px 0 0 40px;padding:10px 14px;border-radius:12px;background:var(--color-warm-section);font-size:13px"><span style="font-weight:600;color:var(--color-bf)">💡 備註</span><br/><span style="color:var(--color-dark)">${item.notes}</span></div>`:''}
         </div>`;
-      }).join('')||'<p class="text-center text-gray-text py-8">還沒有準備事項</p>';
+      }).join('')||'<p class="text-center text-gray-text py-8">還沒有準備事項 🌴</p>';
 
       // Stats
       const catList=Object.keys(CAT_ICONS);
       document.getElementById('au-stats').innerHTML=`
-        <div class="rounded-2xl p-5 shadow-sm" style="border:1px solid var(--color-gray-mid);background:var(--color-card)">
-          <h3 style="font-size:16px;font-weight:700;margin-bottom:14px">📊 分類統計</h3>
+        <div class="habit-card">
+          <h3 style="font-size:15px;font-weight:700;margin-bottom:14px;font-family:'Cormorant Garamond',serif;letter-spacing:0.02em">📊 分類統計</h3>
           <div class="grid grid-cols-2 gap-3">
             ${catList.map(c=>{
               const items=auItems.filter(i=>i.category===c);
               const d=items.filter(i=>i.done).length;
               const t=items.length;
               const p=t?Math.round(d/t*100):0;
-              return`<div class="rounded-xl p-3.5" style="background:var(--color-gray-light);border:1px solid var(--color-gray-mid)">
-                <p style="font-size:14px;font-weight:700;margin-bottom:4px">${CAT_ICONS[c]} ${c}</p>
+              return`<div class="rounded-xl p-3" style="background:var(--color-gray-light);border:1px solid var(--color-gray-mid)">
+                <p style="font-size:13px;font-weight:700;margin-bottom:4px">${CAT_ICONS[c]} ${c}</p>
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                  <span style="font-size:13px;color:var(--color-gray-text)">${d}/${t}</span>
-                  <span style="font-size:14px;font-weight:700;color:#e67e22">${p}%</span>
+                  <span style="font-size:12px;color:var(--color-gray-text)">${d}/${t}</span>
+                  <span style="font-size:14px;font-weight:700;color:var(--color-accent);font-family:'Cormorant Garamond',serif">${p}%</span>
                 </div>
-                <div class="w-full h-2 rounded-full" style="background:#f0e0a0"><div class="h-2 rounded-full" style="background:#e67e22;width:${p}%"></div></div>
+                <div class="w-full h-1.5 rounded-full" style="background:var(--color-warm-dark)"><div class="h-1.5 rounded-full" style="background:var(--color-me);width:${p}%"></div></div>
               </div>`;
             }).join('')}
           </div>
@@ -247,11 +224,11 @@ import Layout from '../layouts/Layout.astro';
     });
 
     async function appInit(){
-      if(SB.initFromCache())document.getElementById('auth-guard').style.display='none';
+      if(SB.initFromCache())document.getElementById('auth-guard')&&(document.getElementById('auth-guard').style.display='none');
       const ok=await SB.init();
       if(!ok||!SB.myProfile){window.location.href='/';return;}
       await loadItems();
-      document.getElementById('auth-guard').style.display='none';
+      const ag=document.getElementById('auth-guard');if(ag)ag.style.display='none';
       render();
     }
     appInit();
