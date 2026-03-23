@@ -186,7 +186,7 @@ import Layout from '../layouts/Layout.astro';
           const srcHtml=r.source?(r.source.startsWith('http')?`<a href="${r.source}" target="_blank" style="color:var(--color-bf);text-decoration:underline;word-break:break-all">${r.source}</a>`:r.source):'';
           body=`${r.topic?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-me-light);border-left:3px solid var(--color-me)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-accent)">📚 學習主題</p><p class="text-sm font-bold">${r.topic}</p></div>`:''}
             ${srcHtml?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-warm-section);border-left:3px solid var(--color-bf)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-bf)">${ICONS.link} 資料來源</p><p class="text-sm">${srcHtml}</p></div>`:''}
-            ${r.words?.length?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-green-light);border-left:3px solid var(--color-green)"><p class="text-xs font-semibold mb-1" style="color:var(--color-green)">習得例句或單字</p>${r.words.map((w,i)=>`<p class="text-sm mb-0.5"><span style="color:var(--color-me);font-weight:600">${i+1}.</span>&nbsp;&nbsp;${w}</p>`).join('')}</div>`:''}
+            ${r.words?.length?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-green-light);border-left:3px solid var(--color-green)"><p class="text-xs font-semibold mb-1" style="color:var(--color-green)">習得例句</p>${r.words.map((w,i)=>{const sen=typeof w==='string'?w:(w.sentence||'');const tr=typeof w==='string'?'':(w.translation||'');return`<div class="mb-1.5"><p class="text-sm"><span style="color:var(--color-me);font-weight:600">${i+1}.</span>&nbsp;&nbsp;${sen}</p>${tr?`<p class="text-xs" style="color:var(--color-gray-text);margin-left:28px">→ ${tr}</p>`:''}</div>`;}).join('')}</div>`:''}
             ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-xs font-semibold mb-0.5">學習筆記</p><p class="text-sm">${linkify(r.note)}</p></div>`:''}`;
         }else if(tpl==='podcast'){
           const linkHtml=r.podcastLink?(r.podcastLink.startsWith('http')?`<a href="${r.podcastLink}" target="_blank" style="color:var(--color-me);text-decoration:underline;word-break:break-all">${r.podcastLink}</a>`:r.podcastLink):'';
@@ -228,10 +228,15 @@ import Layout from '../layouts/Layout.astro';
         const words=r.words||[];
         const rowCount=Math.max(words.length+3,10);
         let lines='';
-        for(let i=0;i<rowCount;i++)lines+=`<div class="flex items-center gap-2 mb-1 learning-row"><span class="text-sm font-bold" style="color:var(--color-me);min-width:28px">${i+1}.</span><input type="text" data-word-input value="${words[i]||''}" class="form-input flex-1" style="padding:8px 12px" /></div>`;
+        for(let i=0;i<rowCount;i++){
+          const w=words[i]||{};
+          const sen=typeof w==='string'?w:(w.sentence||'');
+          const tr=typeof w==='string'?'':(w.translation||'');
+          lines+=`<div class="mb-2 learning-row" style="border-bottom:1px solid var(--color-gray-mid);padding-bottom:8px"><div class="flex items-center gap-2 mb-1"><span class="text-sm font-bold" style="color:var(--color-me);min-width:28px">${i+1}.</span><input type="text" data-word-sentence value="${sen.replace(/"/g,'&quot;')}" class="form-input flex-1" style="padding:8px 12px" placeholder="英文例句..." /></div><div style="margin-left:36px"><input type="text" data-word-translation value="${tr.replace(/"/g,'&quot;')}" class="form-input" style="padding:6px 12px;font-size:13px;color:var(--color-gray-text)" placeholder="中文翻譯..." /></div></div>`;
+        }
         return`<div><label class="block text-sm font-semibold mb-1">學習主題</label><input id="rf-topic" value="${r.topic||''}" class="form-input" placeholder="今天學了什麼？" /></div>
         <div><label class="block text-sm font-semibold mb-1">資料來源</label><input id="rf-source" value="${r.source||''}" class="form-input" placeholder="網址、書名或其他來源..." /></div>
-        <div><label class="block text-sm font-semibold mb-1">習得例句或單字</label><div id="word-list" class="rounded-xl border p-3 max-h-[250px] overflow-y-auto" style="border-color:var(--color-me)">${lines}</div><div class="flex items-center justify-between mt-1"><p id="word-count" class="text-xs" style="color:var(--color-green)">已輸入 ${words.filter(x=>x).length} 個</p><button type="button" onclick="addWordRow()" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增一行</button></div></div>
+        <div><label class="block text-sm font-semibold mb-1">習得例句</label><div id="word-list" class="rounded-xl border p-3 max-h-[250px] overflow-y-auto" style="border-color:var(--color-me)">${lines}</div><div class="flex items-center justify-between mt-1"><p id="word-count" class="text-xs" style="color:var(--color-green)">已輸入 ${words.filter(x=>x).length} 句</p><button type="button" onclick="addWordRow()" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增一行</button></div></div>
         <div><label class="block text-sm font-semibold mb-1">學習筆記</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
       }
       if(tpl==='reading'){
@@ -278,7 +283,9 @@ import Layout from '../layouts/Layout.astro';
       const count=list.querySelectorAll('.learning-row').length;
       const div=document.createElement('div');
       div.className='flex items-center gap-2 mb-1 learning-row';
-      div.innerHTML=`<span class="text-sm font-bold" style="color:var(--color-me);min-width:28px">${count+1}.</span><input type="text" data-word-input value="" class="form-input flex-1" style="padding:8px 12px" />`;
+      div.className='mb-2 learning-row';
+      div.style.cssText='border-bottom:1px solid var(--color-gray-mid);padding-bottom:8px';
+      div.innerHTML=`<div class="flex items-center gap-2 mb-1"><span class="text-sm font-bold" style="color:var(--color-me);min-width:28px">${count+1}.</span><input type="text" data-word-sentence value="" class="form-input flex-1" style="padding:8px 12px" placeholder="英文例句..." /></div><div style="margin-left:36px"><input type="text" data-word-translation value="" class="form-input" style="padding:6px 12px;font-size:13px;color:var(--color-gray-text)" placeholder="中文翻譯..." /></div>`;
       list.appendChild(div);div.querySelector('input').focus();setupEnterNav();updateCounts();
     };
 
@@ -286,12 +293,12 @@ import Layout from '../layouts/Layout.astro';
       const ic=document.getElementById('item-count');
       if(ic){let c=0;document.querySelectorAll('[data-gratitude-input]').forEach(el=>{if(el.value.trim())c++;});ic.textContent='已輸入 '+c+' 個';}
       const wc=document.getElementById('word-count');
-      if(wc){let c=0;document.querySelectorAll('[data-word-input]').forEach(el=>{if(el.value.trim())c++;});wc.textContent='已輸入 '+c+' 個';}
+      if(wc){let c=0;document.querySelectorAll('[data-word-sentence]').forEach(el=>{if(el.value.trim())c++;});wc.textContent='已輸入 '+c+' 句';}
       const qc=document.getElementById('quote-count');
       if(qc){let c=0;document.querySelectorAll('[data-quote-input]').forEach(el=>{if(el.value.trim())c++;});qc.textContent='已輸入 '+c+' 句';}
     }
     function setupEnterNav(){
-      document.querySelectorAll('[data-gratitude-input],[data-word-input],[data-quote-input]').forEach((el,idx,all)=>{
+      document.querySelectorAll('[data-gratitude-input],[data-word-sentence],[data-word-translation],[data-quote-input]').forEach((el,idx,all)=>{
         el.removeEventListener('keydown',el._kh);
         el._kh=e=>{if(e.key==='Enter'){e.preventDefault();if(idx+1<all.length)all[idx+1].focus();}};
         el.addEventListener('keydown',el._kh);
@@ -432,7 +439,7 @@ import Layout from '../layouts/Layout.astro';
         content.note=document.getElementById('rf-note').value;
       }
       else if(tpl==='learning'){
-        const w=[];document.querySelectorAll('[data-word-input]').forEach(el=>{const v=el.value.trim();if(v)w.push(v);});
+        const w=[];const sentences=document.querySelectorAll('[data-word-sentence]');const translations=document.querySelectorAll('[data-word-translation]');sentences.forEach((el,i)=>{const s=el.value.trim();if(s)w.push({sentence:s,translation:translations[i]?.value.trim()||''});});
         content.topic=document.getElementById('rf-topic').value.trim();
         content.source=document.getElementById('rf-source').value.trim();
         content.words=w;content.note=document.getElementById('rf-note').value;
