@@ -7,7 +7,7 @@ export async function POST({ request }) {
   const { action } = body;
 
   if (action === 'today') {
-    const today = new Date().toISOString().split('T')[0];
+    const today = body.date || new Date().toISOString().split('T')[0];
     const { rows: habits } = await pool.query('SELECT * FROM habits WHERE couple_id=$1 ORDER BY created_at', [u.couple_id]);
     const habitIds = habits.map(h => h.id);
     const { rows: records } = await pool.query(

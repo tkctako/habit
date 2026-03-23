@@ -146,7 +146,10 @@ import Layout from '../layouts/Layout.astro';
             ${r.quote?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-me-light);border-left:3px solid var(--color-me)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-accent)">✨ 金句</p><p class="text-sm">"${r.quote}"</p></div>`:''}
             ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-bf)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-bf)">💬 閱讀心得</p><p class="text-sm">${r.note}</p></div>`:''}`;
         }else if(tpl==='learning'){
-          body=`${r.words?.length?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-green-light);border-left:3px solid var(--color-green)"><p class="text-xs font-semibold mb-1" style="color:var(--color-green)">習得例句或單字</p>${r.words.map((w,i)=>`<p class="text-sm mb-0.5"><span style="color:var(--color-me);font-weight:600">${i+1}.</span>&nbsp;&nbsp;${w}</p>`).join('')}</div>`:''}
+          const srcHtml=r.source?(r.source.startsWith('http')?`<a href="${r.source}" target="_blank" style="color:var(--color-bf);text-decoration:underline;word-break:break-all">${r.source}</a>`:r.source):'';
+          body=`${r.topic?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-me-light);border-left:3px solid var(--color-me)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-accent)">📚 學習主題</p><p class="text-sm font-bold">${r.topic}</p></div>`:''}
+            ${srcHtml?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-warm-section);border-left:3px solid var(--color-bf)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-bf)">${ICONS.link} 資料來源</p><p class="text-sm">${srcHtml}</p></div>`:''}
+            ${r.words?.length?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-green-light);border-left:3px solid var(--color-green)"><p class="text-xs font-semibold mb-1" style="color:var(--color-green)">習得例句或單字</p>${r.words.map((w,i)=>`<p class="text-sm mb-0.5"><span style="color:var(--color-me);font-weight:600">${i+1}.</span>&nbsp;&nbsp;${w}</p>`).join('')}</div>`:''}
             ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-xs font-semibold mb-0.5">學習筆記</p><p class="text-sm">${r.note}</p></div>`:''}`;
         }else if(tpl==='exercise'){
           body=`<div class="rounded-lg p-3 mb-2" style="background:#f0ebe4;border-left:3px solid var(--color-red)"><p class="text-sm"><b>類型：</b>${r.type||'-'}</p><p class="text-sm"><b>時長：</b>${r.duration||'-'}</p></div>
@@ -183,7 +186,9 @@ import Layout from '../layouts/Layout.astro';
         const rowCount=Math.max(words.length+3,10);
         let lines='';
         for(let i=0;i<rowCount;i++)lines+=`<div class="flex items-center gap-2 mb-1 learning-row"><span class="text-sm font-bold" style="color:var(--color-me);min-width:28px">${i+1}.</span><input type="text" data-word-input value="${words[i]||''}" class="form-input flex-1" style="padding:8px 12px" /></div>`;
-        return`<div><label class="block text-sm font-semibold mb-1">習得例句或單字</label><div id="word-list" class="rounded-xl border p-3 max-h-[250px] overflow-y-auto" style="border-color:var(--color-me)">${lines}</div><div class="flex items-center justify-between mt-1"><p id="word-count" class="text-xs" style="color:var(--color-green)">已輸入 ${words.filter(x=>x).length} 個</p><button type="button" onclick="addWordRow()" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增一行</button></div></div>
+        return`<div><label class="block text-sm font-semibold mb-1">學習主題</label><input id="rf-topic" value="${r.topic||''}" class="form-input" placeholder="今天學了什麼？" /></div>
+        <div><label class="block text-sm font-semibold mb-1">資料來源</label><input id="rf-source" value="${r.source||''}" class="form-input" placeholder="網址、書名或其他來源..." /></div>
+        <div><label class="block text-sm font-semibold mb-1">習得例句或單字</label><div id="word-list" class="rounded-xl border p-3 max-h-[250px] overflow-y-auto" style="border-color:var(--color-me)">${lines}</div><div class="flex items-center justify-between mt-1"><p id="word-count" class="text-xs" style="color:var(--color-green)">已輸入 ${words.filter(x=>x).length} 個</p><button type="button" onclick="addWordRow()" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增一行</button></div></div>
         <div><label class="block text-sm font-semibold mb-1">學習筆記</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
       }
       if(tpl==='reading')return`<div><label class="block text-sm font-semibold mb-1">書名</label><input id="rf-book" value="${r.book||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">金句</label><input id="rf-quote" value="${r.quote||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">閱讀心得</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
@@ -260,6 +265,8 @@ import Layout from '../layouts/Layout.astro';
       if(tpl==='reading'){content.book=document.getElementById('rf-book').value;content.quote=document.getElementById('rf-quote').value;content.note=document.getElementById('rf-note').value;}
       else if(tpl==='learning'){
         const w=[];document.querySelectorAll('[data-word-input]').forEach(el=>{const v=el.value.trim();if(v)w.push(v);});
+        content.topic=document.getElementById('rf-topic').value.trim();
+        content.source=document.getElementById('rf-source').value.trim();
         content.words=w;content.note=document.getElementById('rf-note').value;
       }else if(tpl==='exercise'){content.type=document.getElementById('rf-type').value;content.duration=document.getElementById('rf-duration').value;content.note=document.getElementById('rf-note').value;}
       else if(tpl==='gratitude'){
