@@ -31,7 +31,9 @@ import Layout from '../layouts/Layout.astro';
         <button onclick="closeRM()" class="text-2xl text-gray-text bg-transparent border-none cursor-pointer">×</button>
       </div>
       <form id="record-form" class="space-y-4">
-        <div><label class="block text-sm font-semibold mb-1">日期</label><input type="date" id="rf-date" class="form-input" /></div>
+        <div id="date-single"><label class="block text-sm font-semibold mb-1">日期</label><input type="date" id="rf-date" class="form-input" /></div>
+        <div id="date-range" style="display:none"><label class="block text-sm font-semibold mb-1">日期範圍</label><div class="flex items-center gap-2"><input type="date" id="rf-date-start" class="form-input flex-1" /><span class="text-gray-text font-semibold">～</span><input type="date" id="rf-date-end" class="form-input flex-1" /></div><p id="date-range-count" class="text-xs mt-1" style="color:var(--color-green)"></p></div>
+        <div style="margin-top:4px"><label class="text-xs cursor-pointer flex items-center gap-1" style="color:var(--color-accent)"><input type="checkbox" id="rf-multi" style="accent-color:var(--color-me)" /> 一次新增多天</label></div>
         <div id="record-fields"></div>
         <div class="flex gap-3 pt-2">
           <button type="submit" class="btn-gradient flex-1">儲存</button>
@@ -219,11 +221,58 @@ import Layout from '../layouts/Layout.astro';
     function openRM(r){
       const tpl=getTpl(habit.category);
       const today=new Date().toISOString().split('T')[0];
+      const isEdit=!!r;
       document.getElementById('rf-date').value=r?.date||today;
+      document.getElementById('rf-date-start').value=today;
+      document.getElementById('rf-date-end').value=today;
+      document.getElementById('rf-multi').checked=false;
+      document.getElementById('date-single').style.display=isEdit?'':'block';
+      document.getElementById('date-range').style.display='none';
+      document.getElementById('rf-multi').parentElement.parentElement.style.display=isEdit?'none':'';
+      updateDateCount();
       document.getElementById('record-fields').innerHTML=getFields(tpl,r);
-      document.getElementById('rm-title').textContent=r?'編輯記錄':'新增記錄';
+      document.getElementById('rm-title').textContent=isEdit?'編輯記錄':'新增記錄';
       document.getElementById('record-modal').style.display='flex';
       setupEnterNav();
+    }
+
+    // Multi-date toggle
+    document.getElementById('rf-multi').addEventListener('change',function(){
+      const on=this.checked;
+      document.getElementById('date-single').style.display=on?'none':'block';
+      document.getElementById('date-range').style.display=on?'':'none';
+      if(on){
+        const v=document.getElementById('rf-date').value;
+        document.getElementById('rf-date-start').value=v;
+        document.getElementById('rf-date-end').value=v;
+      }
+      updateDateCount();
+    });
+    document.getElementById('rf-date-start').addEventListener('change',updateDateCount);
+    document.getElementById('rf-date-end').addEventListener('change',updateDateCount);
+
+    function updateDateCount(){
+      const s=document.getElementById('rf-date-start').value;
+      const e=document.getElementById('rf-date-end').value;
+      const el=document.getElementById('date-range-count');
+      if(s&&e){
+        const days=Math.round((new Date(e)-new Date(s))/(86400000))+1;
+        el.textContent=days>0?`將新增 ${days} 筆記錄`:'結束日期需晚於開始日期';
+        el.style.color=days>0?'var(--color-green)':'var(--color-red)';
+      }
+    }
+
+    function getDateList(){
+      if(!document.getElementById('rf-multi').checked){
+        return[document.getElementById('rf-date').value];
+      }
+      const s=new Date(document.getElementById('rf-date-start').value);
+      const e=new Date(document.getElementById('rf-date-end').value);
+      const dates=[];
+      for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1)){
+        dates.push(d.toISOString().split('T')[0]);
+      }
+      return dates;
     }
 
     window.toggleRecordCheck=async function(date){
@@ -248,7 +297,6 @@ import Layout from '../layouts/Layout.astro';
     document.getElementById('record-form').addEventListener('submit',async function(e){
       e.preventDefault();
       const tpl=getTpl(habit.category);
-      const dateVal=document.getElementById('rf-date').value;
       let content={};
       if(tpl==='reading'){
         content.book=document.getElementById('rf-book').value;
@@ -267,9 +315,14 @@ import Layout from '../layouts/Layout.astro';
         content.items=items;content.note=document.getElementById('rf-note').value;
       }else{content.note=document.getElementById('rf-note').value;}
 
-      if(editRecordId!==null){await SB.updateRecord(editRecordId,dateVal,content);}
-      else{
-        await SB.addRecord(habitId,dateVal,content);
+      if(editRecordId!==null){
+        const dateVal=document.getElementById('rf-date').value;
+        await SB.updateRecord(editRecordId,dateVal,content);
+      }else{
+        const dates=getDateList();
+        for(const d of dates){
+          await SB.addRecord(habitId,d,content);
+        }
       }
       await reloadRecords();closeRM();renderRecords();
     });
