@@ -255,20 +255,28 @@ import Layout from '../layouts/Layout.astro';
       const myPct=myTotal?Math.round(myDone/myTotal*100):0;
       const bfPct=bfTotal?Math.round(bfDone/bfTotal*100):0;
 
-      let html=`<div class="habit-card text-center" style="margin-bottom:16px;padding:20px 16px">
-        <p style="font-size:14px;color:var(--color-gray-text);font-style:italic;margin-bottom:16px">${quote}</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="bg-card rounded-2xl p-4 shadow-sm" style="border:1px solid var(--color-me-light)">
+      const myFull=myTotal>0&&myPct===100;
+      const bfFull=bfTotal>0&&bfPct===100;
+
+      let html=`<div class="habit-card text-center" style="margin-bottom:12px;padding:20px 16px">
+        <p style="font-size:14px;color:var(--color-gray-text);font-style:italic">${quote}</p>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:stretch">
+        <div style="flex:1;display:flex;flex-direction:column;gap:12px">
+          <div class="bg-card rounded-2xl shadow-sm" style="border:1px solid var(--color-me-light);padding:16px">
             <p style="font-size:14px;margin-bottom:4px">${myEmoji()} ${displayName('我')}</p>
             <p style="font-size:28px;font-weight:700;color:var(--color-me)">${myPct}%</p>
             <p style="font-size:12px;color:var(--color-gray-text)">${myDone} / ${myTotal} 完成</p>
           </div>
-          <div class="rounded-2xl p-4 shadow-sm" style="background:var(--color-gray-light);border:1px solid var(--color-bf-light)">
+          <div class="rounded-2xl shadow-sm" style="background:var(--color-gray-light);border:1px solid var(--color-bf-light);padding:16px">
             <p style="font-size:14px;margin-bottom:4px">${bfEmoji()} ${displayName('男友')}</p>
             <p style="font-size:28px;font-weight:700;color:var(--color-bf)">${bfPct}%</p>
             <p style="font-size:12px;color:var(--color-gray-text)">${bfDone} / ${bfTotal} 完成</p>
           </div>
         </div>
+        ${(myFull||bfFull)?`<div style="display:flex;align-items:center;justify-content:center;width:120px;flex-shrink:0">
+          <img src="/viking-100.jpg" style="max-height:160px;object-fit:contain" />
+        </div>`:''}
       </div>`;
 
       // My section
