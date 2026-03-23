@@ -12,6 +12,16 @@ export async function POST({ request }) {
     return json(rows[0] || null);
   }
 
+  if (action === 'saveQuotes') {
+    const { quotes } = body;
+    const quotesJson = JSON.stringify(quotes || []);
+    await pool.query(`
+      INSERT INTO covers (id,couple_id,image_url,zoom,pos_x,pos_y) VALUES ($1,$2,$3,100,0,0)
+      ON CONFLICT (id) DO UPDATE SET image_url=$3
+    `, ['quotes', u.couple_id, quotesJson]);
+    return json({ ok: true });
+  }
+
   if (action === 'save') {
     const { coverId, imageUrl, zoom, posX, posY } = body;
     await pool.query(`

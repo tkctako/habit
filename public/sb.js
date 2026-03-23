@@ -121,6 +121,9 @@
       return api('covers',{action:'save',coverId,imageUrl,zoom,posX,posY});
     },
 
+    async loadQuotes(){return api('covers',{action:'load',coverId:'quotes'});},
+    async saveQuotes(quotes){return api('covers',{action:'saveQuotes',quotes});},
+
     async loadTodayRecords(){
       const d=new Date();const date=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
       return api('records',{action:'today',date});
