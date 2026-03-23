@@ -390,13 +390,15 @@ import Layout from '../layouts/Layout.astro';
     window.goDetail=function(e,id){if(e.target.closest('button'))return;window.location.href='/detail?id='+id;};
 
     // ===== Tabs =====
-    function setTab(tab){
+    async function setTab(tab){
       currentTab=tab;
       ['today','shared','all'].forEach(t=>{
         const el=document.getElementById('tab-'+t);
         if(t===tab)el.className='flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 tab-active rounded-2xl transition-all';
         else el.className='flex-1 py-3 text-sm font-semibold tab-inactive rounded-2xl transition-all';
       });
+      todayData=null;
+      await reloadHabits();
       render();
     }
     document.getElementById('tab-today').addEventListener('click',()=>setTab('today'));
