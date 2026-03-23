@@ -12,6 +12,7 @@ const { title } = Astro.props;
   <title>{title}</title>
   <script is:inline src="/icons.js"></script>
   <script is:inline src="/sb.js"></script>
+  <script is:inline src="/user-settings.js"></script>
 </head>
 <body class="bg-bg">
   <div id="auth-guard" style="position:fixed;inset:0;background:var(--color-bg,#f5efe6);z-index:9999;display:flex;align-items:center;justify-content:center">
@@ -19,6 +20,37 @@ const { title } = Astro.props;
   </div>
   <div class="app-container">
     <slot />
+  </div>
+
+  <!-- Shared User Settings Modal -->
+  <div id="user-modal" class="modal-backdrop" style="display:none">
+    <div class="modal-content" style="max-height:85vh;overflow-y:auto">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-bold">個人設定</h2>
+        <button onclick="document.getElementById('user-modal').style.display='none'" class="text-2xl text-gray-text cursor-pointer bg-transparent border-none">×</button>
+      </div>
+      <form id="user-form" class="space-y-4">
+        <div><label class="block text-sm font-semibold mb-1.5">你的名稱</label><input type="text" id="uf-name" class="form-input" placeholder="輸入名稱" /></div>
+        <div class="flex gap-3 pt-2">
+          <button type="button" onclick="document.getElementById('user-modal').style.display='none'" class="btn-outline flex-1">取消</button>
+          <button type="submit" class="btn-gradient flex-1">儲存</button>
+        </div>
+      </form>
+      <hr style="border:none;border-top:1px solid var(--color-gray-mid);margin:20px 0 16px" />
+      <button type="button" onclick="document.getElementById('user-modal').style.display='none';window.location.href='/quotes'" class="w-full flex items-center justify-between py-3 px-1 bg-transparent border-none cursor-pointer" style="font-family:'Noto Sans TC',sans-serif">
+        <span class="text-base font-bold text-dark">激勵語錄</span>
+        <span style="color:var(--color-gray-text);font-size:18px">›</span>
+      </button>
+      <hr style="border:none;border-top:1px solid var(--color-gray-mid);margin:20px 0 16px" />
+      <form id="pw-form" class="space-y-4">
+        <h3 class="text-base font-bold">變更密碼</h3>
+        <div><label class="block text-sm font-semibold mb-1.5">新密碼</label><input type="password" id="pw-new" class="form-input" placeholder="至少 6 個字元" /></div>
+        <div><label class="block text-sm font-semibold mb-1.5">確認新密碼</label><input type="password" id="pw-confirm" class="form-input" placeholder="再輸入一次" /></div>
+        <div id="pw-error" class="text-sm text-center" style="color:var(--color-red);display:none"></div>
+        <div id="pw-success" class="text-sm text-center" style="color:var(--color-green);display:none"></div>
+        <button type="submit" class="btn-outline w-full">更新密碼</button>
+      </form>
+    </div>
   </div>
   <script is:inline>
     // Auto-hide guard on login page

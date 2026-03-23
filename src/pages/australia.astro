@@ -4,7 +4,11 @@ import Layout from '../layouts/Layout.astro';
 <Layout title="澳洲準備">
   <div class="flex items-center justify-between px-5 py-3.5 bg-card border-b border-gray-mid">
     <h1 class="text-lg font-bold text-dark flex items-center gap-2" style="font-family:'Cormorant Garamond','Noto Sans TC',serif;letter-spacing:0.02em"><span id="title-palm"></span> 澳洲準備</h1>
-    <button onclick="SB.signOut()" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-mid bg-transparent text-gray-text cursor-pointer" style="font-family:'Noto Sans TC',sans-serif">登出</button>
+    <div class="flex items-center gap-3">
+      <span id="user-greeting" class="text-sm font-semibold text-dark"></span>
+      <button onclick="openUserModal()" class="flex items-center justify-center" style="background:none;border:none;cursor:pointer;width:28px;height:28px;color:var(--color-accent)" id="user-icon-btn"></button>
+      <button onclick="SB.signOut()" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-mid bg-transparent text-gray-text cursor-pointer" style="font-family:'Noto Sans TC',sans-serif">登出</button>
+    </div>
   </div>
 
   <div class="px-4 pt-5 pb-24">
