@@ -14,7 +14,15 @@ import Layout from '../layouts/Layout.astro';
     </div>
 
     <button id="add-record-btn" class="btn-gradient mb-4 flex items-center justify-center gap-2">+ <span id="add-record-text">新增記錄</span></button>
-    <h3 id="records-title" class="text-sm font-bold text-dark mb-3" style="font-family:'Noto Sans TC',sans-serif"></h3>
+    <div class="flex items-center justify-between mb-3">
+      <h3 id="records-title" class="text-sm font-bold text-dark" style="font-family:'Noto Sans TC',sans-serif"></h3>
+      <div class="flex items-center gap-2">
+        <button id="batch-toggle" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-mid bg-transparent cursor-pointer" style="color:var(--color-gray-text);font-family:'Noto Sans TC',sans-serif;display:none" onclick="toggleBatchMode()">批次選取</button>
+        <button id="batch-all" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-mid bg-transparent cursor-pointer" style="color:var(--color-accent);font-family:'Noto Sans TC',sans-serif;display:none" onclick="batchSelectAll()">全選</button>
+        <button id="batch-delete-btn" class="text-xs font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer" style="background:var(--color-red);color:white;font-family:'Noto Sans TC',sans-serif;display:none" onclick="batchDelete()">刪除選取 (0)</button>
+        <button id="batch-cancel" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-mid bg-transparent cursor-pointer" style="color:var(--color-gray-text);font-family:'Noto Sans TC',sans-serif;display:none" onclick="toggleBatchMode()">取消</button>
+      </div>
+    </div>
     <div id="records-container" class="space-y-3"></div>
   </div>
 
@@ -102,6 +110,8 @@ import Layout from '../layouts/Layout.astro';
     function renderRecords(){
       const records=recordsCache,tpl=getTpl(habit.category);
       const c=document.getElementById('records-container');
+      const myRecs=records.filter(r=>r.isMe);
+      document.getElementById('batch-toggle').style.display=(!batchMode&&myRecs.length>1)?'':'none';
       if(!records.length){c.innerHTML='<p class="text-center text-gray-text py-8">還沒有記錄</p>';return;}
       c.innerHTML=records.map(r=>{
         let body='';
@@ -128,10 +138,11 @@ import Layout from '../layouts/Layout.astro';
           body=r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-sm">${r.note}</p></div>`:'';
         }
         const userBadge=habit.type==='shared'?`<span style="font-size:13px;margin-left:8px">${r.userEmoji} ${r.userName}</span>`:'';
-        const editBtns=r.isMe?`<button onclick="openEditR(${r.id})" style="background:none;border:none;cursor:pointer;padding:4px" title="編輯">${ICONS.edit}</button><button onclick="deleteR(${r.id})" style="background:none;border:none;cursor:pointer;padding:4px" title="刪除">${ICONS.trash}</button>`:'';
+        const batchCb=batchMode&&r.isMe?`<input type="checkbox" id="batch-cb-${r.id}" ${batchSelected.has(r.id)?'checked':''} onchange="toggleBatchItem(${r.id})" style="accent-color:var(--color-me);width:18px;height:18px;cursor:pointer;flex-shrink:0" />`:'';
+        const editBtns=batchMode?'':(r.isMe?`<button onclick="openEditR(${r.id})" style="background:none;border:none;cursor:pointer;padding:4px" title="編輯">${ICONS.edit}</button><button onclick="deleteR(${r.id})" style="background:none;border:none;cursor:pointer;padding:4px" title="刪除">${ICONS.trash}</button>`:'');
         const checked=isCheckedIn(r.date,r.user_id);
         const checkBtn=r.isMe?`<button class="check-btn ${checked?'check-done':'check-none'}" onclick="toggleRecordCheck('${r.date}')" style="flex-shrink:0">${checked?'✓':'✕'}</button>`:`<span class="check-btn ${checked?'check-done':'check-none'}" style="flex-shrink:0;opacity:0.4;cursor:default">${checked?'✓':'✕'}</span>`;
-        return`<div class="habit-card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">${checkBtn}<span style="font-size:14px;color:var(--color-gray-text);flex:1">${ICONS.calendarDay} ${dateDisplay}${userBadge}</span><div style="display:flex;gap:8px">${editBtns}</div></div>${body}</div>`;
+        return`<div class="habit-card" ${batchMode&&r.isMe?`onclick="toggleBatchItem(${r.id})" style="cursor:pointer"`:''}><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">${batchCb}${checkBtn}<span style="font-size:14px;color:var(--color-gray-text);flex:1">${ICONS.calendarDay} ${dateDisplay}${userBadge}</span><div style="display:flex;gap:8px">${editBtns}</div></div>${body}</div>`;
       }).join('');
     }
 
@@ -291,6 +302,45 @@ import Layout from '../layouts/Layout.astro';
     };
     window.deleteR=async function(id){
       await SB.deleteRecord(id);
+      await reloadRecords();renderRecords();
+    };
+
+    // Batch delete
+    let batchMode=false,batchSelected=new Set();
+    window.toggleBatchMode=function(){
+      batchMode=!batchMode;
+      batchSelected.clear();
+      document.getElementById('batch-toggle').style.display=batchMode?'none':'';
+      document.getElementById('batch-all').style.display=batchMode?'':'none';
+      document.getElementById('batch-delete-btn').style.display=batchMode?'':'none';
+      document.getElementById('batch-cancel').style.display=batchMode?'':'none';
+      document.getElementById('batch-delete-btn').textContent='刪除選取 (0)';
+      renderRecords();
+    };
+    window.toggleBatchItem=function(id){
+      if(batchSelected.has(id))batchSelected.delete(id);else batchSelected.add(id);
+      const btn=document.getElementById('batch-delete-btn');
+      btn.textContent=`刪除選取 (${batchSelected.size})`;
+      // Update checkbox visual
+      const cb=document.getElementById('batch-cb-'+id);
+      if(cb)cb.checked=batchSelected.has(id);
+    };
+    window.batchSelectAll=function(){
+      const myRecs=recordsCache.filter(r=>r.isMe);
+      if(batchSelected.size===myRecs.length){batchSelected.clear();}
+      else{myRecs.forEach(r=>batchSelected.add(r.id));}
+      document.getElementById('batch-delete-btn').textContent=`刪除選取 (${batchSelected.size})`;
+      renderRecords();
+    };
+    window.batchDelete=async function(){
+      if(!batchSelected.size)return;
+      if(!confirm(`確定刪除 ${batchSelected.size} 筆記錄？`))return;
+      for(const id of batchSelected){await SB.deleteRecord(id);}
+      batchSelected.clear();batchMode=false;
+      document.getElementById('batch-toggle').style.display='';
+      document.getElementById('batch-all').style.display='none';
+      document.getElementById('batch-delete-btn').style.display='none';
+      document.getElementById('batch-cancel').style.display='none';
       await reloadRecords();renderRecords();
     };
 
