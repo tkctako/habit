@@ -23,6 +23,9 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+.app-header {
+  position: sticky; top: 0; z-index: 40;
+}
 body {
   font-family: 'Noto Sans TC', 'Hiragino Sans', -apple-system, sans-serif;
   background: var(--color-bg);
