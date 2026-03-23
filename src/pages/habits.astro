@@ -231,8 +231,9 @@ import Layout from '../layouts/Layout.astro';
       habits.forEach(h=>{
         if(h.type==='personal'&&h.owner!=='me')return;
         const done=h.type==='shared'?h.users?.find(u=>u.name==='我')?.done:h.done;
-        const myRecords=(td?.records||[]).filter(r=>r.habit_id===h.id&&r.user_id===myId);
-        html+=todayCard(h,done,true,myRecords);
+        // For shared habits, show all records (both users); for personal, only mine
+        const recs=(td?.records||[]).filter(r=>r.habit_id===h.id&&(h.type==='shared'||r.user_id===myId));
+        html+=todayCard(h,done,true,recs);
       });
       html+='</div>';
 
@@ -246,8 +247,8 @@ import Layout from '../layouts/Layout.astro';
       habits.forEach(h=>{
         if(h.type==='personal'&&h.owner!=='bf')return;
         const done=h.type==='shared'?h.users?.find(u=>u.name==='男友')?.done:h.done;
-        const bfRecords=(td?.records||[]).filter(r=>r.habit_id===h.id&&r.user_id===partnerId);
-        html+=todayCard(h,done,false,bfRecords);
+        const recs=(td?.records||[]).filter(r=>r.habit_id===h.id&&(h.type==='shared'||r.user_id===partnerId));
+        html+=todayCard(h,done,false,recs);
       });
       html+='</div>';
 
