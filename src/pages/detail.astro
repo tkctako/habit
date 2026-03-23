@@ -390,7 +390,7 @@ import Layout from '../layouts/Layout.astro';
       renderRecords();
     };
 
-    window.closeRM=()=>{clearTimeout(autoSaveTimer);document.getElementById('record-modal').style.display='none';editRecordId=null;const s=document.getElementById('autosave-status');if(s)s.textContent='';};
+    window.closeRM=async()=>{clearTimeout(autoSaveTimer);document.getElementById('record-modal').style.display='none';editRecordId=null;const s=document.getElementById('autosave-status');if(s)s.textContent='';await reloadRecords();renderRecords();};
     document.getElementById('add-record-btn').addEventListener('click',()=>{editRecordId=null;openRM(null);});
     window.openEditR=function(id){
       editRecordId=id;
