@@ -237,7 +237,7 @@ import Layout from '../layouts/Layout.astro';
         }
         return`<div><label class="block text-sm font-semibold mb-1">學習主題</label><input id="rf-topic" value="${r.topic||''}" class="form-input" placeholder="今天學了什麼？" /></div>
         <div><label class="block text-sm font-semibold mb-1">資料來源</label><input id="rf-source" value="${r.source||''}" class="form-input" placeholder="網址、書名或其他來源..." /></div>
-        <div><div class="flex items-center justify-between mb-1"><label class="block text-sm font-semibold">習得例句</label><button type="button" onclick="copySentences(event)" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">📋 複製全部</button></div><div id="word-list" class="rounded-xl border p-3 max-h-[250px] overflow-y-auto" style="border-color:var(--color-me)">${lines}</div><div class="flex items-center justify-between mt-1"><p id="word-count" class="text-xs" style="color:var(--color-green)">已輸入 ${words.filter(x=>x).length} 句</p><button type="button" onclick="addWordRow()" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增一行</button></div></div>
+        <div><div class="flex items-center justify-between mb-1"><label class="block text-sm font-semibold">習得例句</label><button type="button" onclick="copySentences(event)" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">${ICONS.copy} 複製全部</button></div><div id="word-list" class="rounded-xl border p-3 max-h-[250px] overflow-y-auto" style="border-color:var(--color-me)">${lines}</div><div class="flex items-center justify-between mt-1"><p id="word-count" class="text-xs" style="color:var(--color-green)">已輸入 ${words.filter(x=>x).length} 句</p><button type="button" onclick="addWordRow()" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增一行</button></div></div>
         <div><label class="block text-sm font-semibold mb-1">學習筆記</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
       }
       if(tpl==='reading'){
@@ -288,14 +288,14 @@ import Layout from '../layouts/Layout.astro';
       // Fallback for browsers where clipboard API needs secure context
       if(navigator.clipboard&&navigator.clipboard.writeText){
         navigator.clipboard.writeText(text).then(()=>{
-          if(btn){btn.textContent='✅ 已複製';setTimeout(()=>btn.textContent='📋 複製全部',1500);}
+          if(btn){btn.innerHTML=ICONS.checkCircle+' 已複製';setTimeout(()=>btn.innerHTML=ICONS.copy+' 複製全部',1500);}
         }).catch(()=>fallbackCopy(text,btn));
       }else{fallbackCopy(text,btn);}
     };
     function fallbackCopy(text,btn){
       const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;left:-9999px';
       document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
-      if(btn){btn.textContent='✅ 已複製';setTimeout(()=>btn.textContent='📋 複製全部',1500);}
+      if(btn){btn.innerHTML=ICONS.checkCircle+' 已複製';setTimeout(()=>btn.innerHTML=ICONS.copy+' 複製全部',1500);}
     }
     window.addWordRow=function(){
       const list=document.getElementById('word-list');
@@ -473,8 +473,8 @@ import Layout from '../layouts/Layout.astro';
     function showAutoSaveStatus(text,color){
       const el=document.getElementById('autosave-status');
       el.style.color=color||'var(--color-gray-text)';
-      el.textContent=text;el.style.opacity='1';
-      if(text==='✅ 已儲存')setTimeout(()=>{el.style.opacity='0';},2000);
+      el.innerHTML=text;el.style.opacity='1';
+      if(text.includes('已儲存'))setTimeout(()=>{el.style.opacity='0';},2000);
     }
     function markDirty(){
       if(editRecordId===null)return;
@@ -485,14 +485,14 @@ import Layout from '../layouts/Layout.astro';
       if(!autoSaveDirty||editRecordId===null||autoSaving)return;
       autoSaveDirty=false;
       autoSaving=true;
-      showAutoSaveStatus('⏳ 儲存中...','var(--color-gray-text)');
+      showAutoSaveStatus(ICONS.save+' 儲存中...','var(--color-gray-text)');
       try{
         const content=gatherContent();
         const dateVal=document.getElementById('rf-date').value;
         await SB.updateRecord(editRecordId,dateVal,content);
-        showAutoSaveStatus('✅ 已儲存','var(--color-green)');
+        showAutoSaveStatus(ICONS.checkCircle+' 已儲存','var(--color-green)');
       }catch(e){
-        showAutoSaveStatus('❌ 失敗','var(--color-red)');
+        showAutoSaveStatus('✕ 失敗','var(--color-red)');
       }
       autoSaving=false;
     },1000);
