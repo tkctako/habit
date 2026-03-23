@@ -267,6 +267,9 @@ import Layout from '../layouts/Layout.astro';
       await loadMonth();
       document.getElementById('auth-guard').style.display='none';
       renderCalendar();
+      // Auto-show today's detail
+      const isCurMonth=viewYear===now.getFullYear()&&viewMonth===now.getMonth();
+      if(isCurMonth) showDay(now.getDate());
     }
     appInit();
   </script>
