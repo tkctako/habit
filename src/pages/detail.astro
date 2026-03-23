@@ -82,7 +82,7 @@ import Layout from '../layouts/Layout.astro';
       if(!habit){document.getElementById('habit-title').textContent='找不到';return;}
       document.getElementById('habit-title').textContent=habit.name;
       const tpl=getTpl(habit.category);
-      const labels={reading:['新增閱讀記錄','閱讀記錄'],learning:['新增語言學習記錄','語言學習記錄'],exercise:['新增運動記錄','運動記錄'],gratitude:['新增感恩紀錄','感恩紀錄'],general:['新增記錄','記錄']};
+      const labels={reading:['新增閱讀記錄','閱讀記錄'],learning:['新增語言學習記錄','語言學習記錄'],exercise:['新增運動記錄','運動記錄'],gratitude:['新增感恩紀錄','感恩紀錄'],podcast:['新增 Podcast 記錄','Podcast 記錄'],general:['新增記錄','記錄']};
       document.getElementById('add-record-text').textContent=labels[tpl][0];
       document.getElementById('records-title').textContent=labels[tpl][1];
       // Goal
@@ -140,6 +140,7 @@ import Layout from '../layouts/Layout.astro';
       if(cat==='閱讀')return'reading';
       if(cat==='運動')return'exercise';
       if(cat==='感恩紀錄')return'gratitude';
+      if(cat==='Podcast')return'podcast';
       if(cat==='飲食')return'general';
       return'general';
     }
@@ -176,7 +177,9 @@ import Layout from '../layouts/Layout.astro';
         if(tpl==='reading'){
           // Support both old single quote and new quotes array
           const quotes=r.quotes||( r.quote?[r.quote]:[]);
-          body=`${r.book?`<div class="flex items-center gap-2 mb-2"><span style="color:var(--color-me)">📖</span><span class="font-bold text-sm">${r.book}</span></div>`:''}
+          const pageInfo=r.pageFrom&&r.pageTo?` (p.${r.pageFrom}-${r.pageTo})`:(r.pageFrom?` (p.${r.pageFrom})`:'');
+          const typeTag=r.readingType?`<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:var(--color-me-light);color:var(--color-gray-text);margin-left:6px">${r.readingType}</span>`:'';
+          body=`${r.book?`<div class="flex items-center gap-2 mb-2"><span style="color:var(--color-me)">📖</span><span class="font-bold text-sm">${r.book}${pageInfo}</span>${typeTag}</div>`:''}
             ${quotes.length?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-me-light);border-left:3px solid var(--color-me)"><p class="text-xs font-semibold mb-1" style="color:var(--color-accent)">✨ 金句</p>${quotes.map((q,i)=>`<p class="text-sm mb-0.5"><span style="color:var(--color-me);font-weight:600">${i+1}.</span>&nbsp;&nbsp;"${q}"</p>`).join('')}</div>`:''}
             ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-bf)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-bf)">💬 閱讀心得</p><p class="text-sm">${linkify(r.note)}</p></div>`:''}`;
         }else if(tpl==='learning'){
@@ -185,6 +188,11 @@ import Layout from '../layouts/Layout.astro';
             ${srcHtml?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-warm-section);border-left:3px solid var(--color-bf)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-bf)">${ICONS.link} 資料來源</p><p class="text-sm">${srcHtml}</p></div>`:''}
             ${r.words?.length?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-green-light);border-left:3px solid var(--color-green)"><p class="text-xs font-semibold mb-1" style="color:var(--color-green)">習得例句或單字</p>${r.words.map((w,i)=>`<p class="text-sm mb-0.5"><span style="color:var(--color-me);font-weight:600">${i+1}.</span>&nbsp;&nbsp;${w}</p>`).join('')}</div>`:''}
             ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-xs font-semibold mb-0.5">學習筆記</p><p class="text-sm">${linkify(r.note)}</p></div>`:''}`;
+        }else if(tpl==='podcast'){
+          const linkHtml=r.podcastLink?(r.podcastLink.startsWith('http')?`<a href="${r.podcastLink}" target="_blank" style="color:var(--color-me);text-decoration:underline;word-break:break-all">${r.podcastLink}</a>`:r.podcastLink):'';
+          body=`${r.podcastName?`<div class="flex items-center gap-2 mb-2"><span style="color:var(--color-me)">🎙️</span><span class="font-bold text-sm">${r.podcastName}</span></div>`:''}
+            ${linkHtml?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-me-light);border-left:3px solid var(--color-me)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-accent)">${ICONS.link} 連結</p><p class="text-sm">${linkHtml}</p></div>`:''}
+            ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-xs font-semibold mb-0.5">備註</p><p class="text-sm" style="white-space:pre-line">${linkify(r.note)}</p></div>`:''}`;
         }else if(tpl==='exercise'){
           body=`<div class="rounded-lg p-3 mb-2" style="background:#f0ebe4;border-left:3px solid var(--color-red)"><p class="text-sm"><b>類型：</b>${r.type||'-'}</p><p class="text-sm"><b>時長：</b>${r.duration||'-'}</p></div>
             ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-sm">${linkify(r.note)}</p></div>`:''}`;
@@ -237,9 +245,14 @@ import Layout from '../layouts/Layout.astro';
           lines+=`<div class="flex items-center gap-2 mb-1 quote-row"><span class="text-sm font-bold" style="color:var(--color-me);min-width:24px">${i+1}.</span><input type="text" data-quote-input value="${(quotes[i]||'').replace(/"/g,'&quot;')}" class="form-input flex-1" style="padding:8px 12px" placeholder="摘錄金句..." /></div>`;
         }
         return`<div><label class="block text-sm font-semibold mb-1">書名 *</label><input id="rf-book" value="${r.book||''}" class="form-input" placeholder="輸入書名..." required /></div>
+        <div><label class="block text-sm font-semibold mb-1">閱讀類型</label><select id="rf-reading-type" class="form-select"><option value="電子閱讀器" ${r.readingType==='電子閱讀器'?'selected':''}>電子閱讀器</option><option value="實體書籍" ${r.readingType==='實體書籍'?'selected':''}>實體書籍</option></select></div>
+        <div class="flex gap-3"><div class="flex-1"><label class="block text-sm font-semibold mb-1">從第幾頁</label><input id="rf-page-from" type="number" value="${r.pageFrom||''}" class="form-input" placeholder="起始頁" /></div><div class="flex-1"><label class="block text-sm font-semibold mb-1">到第幾頁</label><input id="rf-page-to" type="number" value="${r.pageTo||''}" class="form-input" placeholder="結束頁" /></div></div>
         <div><label class="block text-sm font-semibold mb-1">✨ 金句</label><div id="quote-list" class="rounded-xl border p-3 max-h-[250px] overflow-y-auto" style="border-color:var(--color-me)">${lines}</div><div class="flex items-center justify-between mt-1"><p id="quote-count" class="text-xs" style="color:var(--color-green)">已輸入 ${quotes.filter(x=>x).length} 句</p><button type="button" onclick="addQuoteRowR()" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增一句</button></div></div>
         <div><label class="block text-sm font-semibold mb-1">閱讀心得</label><textarea id="rf-note" rows="4" class="form-input" style="resize:vertical" placeholder="寫下你的閱讀心得與感想...">${r.note||''}</textarea></div>`;
       }
+      if(tpl==='podcast')return`<div><label class="block text-sm font-semibold mb-1">Podcast 名稱</label><input id="rf-podcast-name" value="${r.podcastName||''}" class="form-input" placeholder="節目名稱..." /></div>
+        <div><label class="block text-sm font-semibold mb-1">連結</label><input id="rf-podcast-link" value="${r.podcastLink||''}" class="form-input" placeholder="https://..." /></div>
+        <div><label class="block text-sm font-semibold mb-1">備註</label><textarea id="rf-note" rows="3" class="form-input" style="resize:vertical">${r.note||''}</textarea></div>`;
       if(tpl==='exercise')return`<div><label class="block text-sm font-semibold mb-1">運動類型</label><input id="rf-type" value="${r.type||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">時長</label><input id="rf-duration" value="${r.duration||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">備註</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
       return`<div><label class="block text-sm font-semibold mb-1">備註</label><textarea id="rf-note" rows="3" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
     }
@@ -407,8 +420,15 @@ import Layout from '../layouts/Layout.astro';
       let content={};
       if(tpl==='reading'){
         content.book=document.getElementById('rf-book').value;
+        content.readingType=document.getElementById('rf-reading-type').value;
+        content.pageFrom=document.getElementById('rf-page-from').value;
+        content.pageTo=document.getElementById('rf-page-to').value;
         const q=[];document.querySelectorAll('[data-quote-input]').forEach(el=>{const v=el.value.trim();if(v)q.push(v);});
         content.quotes=q;
+        content.note=document.getElementById('rf-note').value;
+      }else if(tpl==='podcast'){
+        content.podcastName=document.getElementById('rf-podcast-name').value.trim();
+        content.podcastLink=document.getElementById('rf-podcast-link').value.trim();
         content.note=document.getElementById('rf-note').value;
       }
       else if(tpl==='learning'){
