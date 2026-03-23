@@ -166,10 +166,11 @@ h1, h2, h3, h4, .serif {
 }
 .cover-container img {
   position: absolute; left: 0; top: 0;
-  width: 100%; height: 100%; object-fit: cover;
+  width: 100%; height: 100%; object-fit: contain;
   cursor: grab; user-select: none; -webkit-user-select: none;
   transform-origin: center center;
   transition: none;
+  background: var(--color-gray-light);
 }
 .cover-container img:active { cursor: grabbing; }
 .cover-controls {

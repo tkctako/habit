@@ -13,16 +13,6 @@ import Layout from '../layouts/Layout.astro';
       <h2 id="habit-title" class="text-xl font-bold text-dark"></h2>
     </div>
 
-    <div id="cover-wrap" class="cover-container mb-5">
-      <img id="cover-img" draggable="false" style="display:none" />
-      <span id="cover-text" class="text-gray-text text-sm absolute inset-0 flex items-center justify-center z-5">📷 添加封面圖片</span>
-      <div class="cover-controls">
-        <input type="range" min="100" max="300" value="100" class="cover-zoom" id="cover-zoom" />
-        <label class="cursor-pointer"><span class="cam-icon"></span><input type="file" accept="image/*" id="cover-file" class="hidden" /></label>
-        <button id="cover-url-btn"><span class="link-icon"></span></button>
-      </div>
-    </div>
-
     <button id="add-record-btn" class="btn-gradient mb-4 flex items-center justify-center gap-2">+ <span id="add-record-text">新增記錄</span></button>
     <h3 id="records-title" class="text-sm font-bold text-dark mb-3" style="font-family:'Noto Sans TC',sans-serif"></h3>
     <div id="records-container" class="space-y-3"></div>
@@ -69,7 +59,6 @@ import Layout from '../layouts/Layout.astro';
       const labels={reading:['新增閱讀記錄','閱讀記錄'],learning:['新增學習記錄','學習記錄'],exercise:['新增運動記錄','運動記錄'],gratitude:['新增感恩紀錄','感恩紀錄'],general:['新增記錄','記錄']};
       document.getElementById('add-record-text').textContent=labels[tpl][0];
       document.getElementById('records-title').textContent=labels[tpl][1];
-      initCover();
       await reloadRecords();
       document.getElementById('auth-guard').style.display='none';
       renderRecords();
@@ -105,33 +94,6 @@ import Layout from '../layouts/Layout.astro';
     }
     function isCheckedIn(date,userId){
       return checkInsCache.some(c=>c.habit_id===habitId&&c.user_id===userId&&c.date===date&&c.done);
-    }
-
-    function initCover(){
-      const imgEl=document.getElementById('cover-img'),zoomEl=document.getElementById('cover-zoom');
-      let scale=1,posX=0,posY=0,dragging=false,startX=0,startY=0,lx=0,ly=0;
-      function apply(){imgEl.style.transform='scale('+scale+') translate('+posX+'px,'+posY+'px)';}
-      zoomEl.addEventListener('input',function(e){e.stopPropagation();scale=parseInt(this.value)/100;apply();});
-      imgEl.addEventListener('mousedown',function(e){e.preventDefault();e.stopPropagation();dragging=true;startX=e.clientX;startY=e.clientY;lx=posX;ly=posY;});
-      document.addEventListener('mousemove',function(e){if(!dragging)return;posX=lx+(e.clientX-startX)/scale;posY=ly+(e.clientY-startY)/scale;apply();});
-      document.addEventListener('mouseup',function(){dragging=false;});
-      imgEl.addEventListener('touchstart',function(e){dragging=true;startX=e.touches[0].clientX;startY=e.touches[0].clientY;lx=posX;ly=posY;},{passive:true});
-      document.addEventListener('touchmove',function(e){if(!dragging)return;posX=lx+(e.touches[0].clientX-startX)/scale;posY=ly+(e.touches[0].clientY-startY)/scale;apply();},{passive:true});
-      document.addEventListener('touchend',function(){dragging=false;});
-      const DETAIL_COVER_ID='habit-'+habitId;
-      let saveTimer=null;
-      function debounceSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{SB.saveCover(DETAIL_COVER_ID,imgEl.src,Math.round(scale*100),Math.round(posX),Math.round(posY));},800);}
-      document.addEventListener('mouseup',function(){if(dragging){dragging=false;debounceSave();}});
-      document.addEventListener('touchend',function(){if(dragging){dragging=false;debounceSave();}});
-      zoomEl.addEventListener('input',function(){debounceSave();});
-      function setCover(src){imgEl.src=src;imgEl.style.display='block';document.getElementById('cover-text').style.display='none';scale=1;posX=0;posY=0;zoomEl.value=100;apply();SB.saveCover(DETAIL_COVER_ID,src,100,0,0);}
-      document.getElementById('cover-file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setCover(ev.target.result);r.readAsDataURL(f);});
-      document.getElementById('cover-url-btn').addEventListener('click',()=>{const url=prompt('輸入圖片網址：');if(url)setCover(url);});
-      // Load from DB
-      (async()=>{
-        const c=await SB.loadCover(DETAIL_COVER_ID);
-        if(c&&c.image_url){imgEl.src=c.image_url;imgEl.style.display='block';document.getElementById('cover-text').style.display='none';scale=(c.zoom||100)/100;posX=c.pos_x||0;posY=c.pos_y||0;zoomEl.value=c.zoom||100;apply();}
-      })();
     }
 
     function renderRecords(){
