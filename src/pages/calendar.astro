@@ -201,10 +201,12 @@ import Layout from '../layouts/Layout.astro';
         });
       }catch(e){}
 
-      let html=`<div class="flex items-center gap-2 mb-3"><span class="text-lg cursor-pointer" onclick="document.getElementById('day-detail').innerHTML=''">‹</span><h3 class="font-bold">${viewYear}年${viewMonth+1}月${day}日 星期${wk[dt.getDay()]}</h3></div>
+      const myFull=myItems.length>0&&myPct===100;
+      const bfFull=bfItems.length>0&&bfPct===100;
+      let html=`<div class="flex items-center gap-2 mb-3"><span class="text-lg cursor-pointer" onclick="document.getElementById('day-detail').innerHTML='';selectedDay=null;renderCalendar()">‹</span><h3 class="font-bold">${viewYear}年${viewMonth+1}月${day}日 星期${wk[dt.getDay()]}</h3></div>
         <div class="grid grid-cols-2 gap-3 mb-4">
-          <div class="bg-card rounded-2xl p-4 shadow-sm" style="border:1px solid var(--color-me-light)"><p class="text-sm mb-1">${myEmoji()} ${displayName('我')}</p><p class="text-2xl font-bold" style="color:var(--color-me)">${myPct}%</p><p class="text-xs text-gray-text">${myDone} / ${myItems.length} 完成</p></div>
-          <div class="rounded-2xl p-4 shadow-sm" style="background:var(--color-gray-light);border:1px solid var(--color-bf-light)"><p class="text-sm mb-1">${bfEmoji()} ${displayName('男友')}</p><p class="text-2xl font-bold" style="color:var(--color-bf)">${bfPct}%</p><p class="text-xs text-gray-text">${bfDone} / ${bfItems.length} 完成</p></div>
+          <div class="bg-card rounded-2xl p-4 shadow-sm" style="border:1px solid var(--color-me-light);display:flex;align-items:center;gap:8px"><div style="flex:1"><p class="text-sm mb-1">${myEmoji()} ${displayName('我')}</p><p class="text-2xl font-bold" style="color:var(--color-me)">${myPct}%</p><p class="text-xs text-gray-text">${myDone} / ${myItems.length} 完成</p></div>${myFull?'<img src="/viking-100.png" style="width:100px;height:100px;object-fit:contain" />':''}</div>
+          <div class="rounded-2xl p-4 shadow-sm" style="background:var(--color-gray-light);border:1px solid var(--color-bf-light);display:flex;align-items:center;gap:8px"><div style="flex:1"><p class="text-sm mb-1">${bfEmoji()} ${displayName('男友')}</p><p class="text-2xl font-bold" style="color:var(--color-bf)">${bfPct}%</p><p class="text-xs text-gray-text">${bfDone} / ${bfItems.length} 完成</p></div>${bfFull?'<img src="/viking-100.png" style="width:100px;height:100px;object-fit:contain" />':''}</div>
         </div>
         <h3 class="font-bold mb-2 text-base">習慣詳情</h3>`;
 
