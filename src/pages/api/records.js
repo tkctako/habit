@@ -6,6 +6,21 @@ export async function POST({ request }) {
   const body = await request.json();
   const { action } = body;
 
+  if (action === 'today') {
+    const today = new Date().toISOString().split('T')[0];
+    const { rows: habits } = await pool.query('SELECT * FROM habits WHERE couple_id=$1 ORDER BY created_at', [u.couple_id]);
+    const habitIds = habits.map(h => h.id);
+    const { rows: records } = await pool.query(
+      'SELECT r.*, u.display_name, u.emoji FROM records r JOIN users u ON r.user_id=u.id WHERE r.habit_id=ANY($1) AND r.date=$2 ORDER BY r.created_at DESC',
+      [habitIds, today]
+    );
+    const { rows: checkIns } = await pool.query(
+      'SELECT * FROM check_ins WHERE habit_id=ANY($1) AND date=$2',
+      [habitIds, today]
+    );
+    return json({ habits, records, checkIns, today });
+  }
+
   if (action === 'list') {
     const { habitId } = body;
     const { rows } = await pool.query('SELECT r.*, u.display_name, u.emoji FROM records r JOIN users u ON r.user_id=u.id WHERE r.habit_id=$1 ORDER BY r.date DESC', [habitId]);

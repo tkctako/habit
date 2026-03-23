@@ -121,6 +121,14 @@
       return api('covers',{action:'save',coverId,imageUrl,zoom,posX,posY});
     },
 
+    async loadTodayRecords(){return api('records',{action:'today'});},
+
+    async loadAustralia(){return api('australia',{action:'list'});},
+    async addAustralia(data){return api('australia',{action:'add',...data});},
+    async updateAustralia(data){return api('australia',{action:'update',...data});},
+    async toggleAustralia(id){return api('australia',{action:'toggle',id});},
+    async deleteAustralia(id){return api('australia',{action:'delete',id});},
+
     formatDate(iso){
       if(!iso)return'';
       const d=new Date(iso+'T00:00:00');

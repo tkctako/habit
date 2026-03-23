@@ -44,6 +44,7 @@ import Layout from '../layouts/Layout.astro';
   <nav class="bottom-nav">
     <a href="/habits" class="active"><span class="text-lg">☰</span><span>習慣</span></a>
     <a href="/calendar"><span class="text-lg">📅</span><span>月曆</span></a>
+    <a href="/australia"><span class="text-lg">🌴</span><span>澳洲</span></a>
   </nav>
 
   <!-- User Modal -->
@@ -234,64 +235,92 @@ import Layout from '../layouts/Layout.astro';
     }
 
     // ===== TODAY TAB =====
-    function renderToday(habits,c){
+    let todayData=null;
+
+    async function loadTodayData(){
+      todayData=await SB.loadTodayRecords();
+    }
+
+    async function renderToday(habits,c){
+      if(!todayData) await loadTodayData();
       const quote=QUOTES[Math.floor(Math.random()*QUOTES.length)];
-      const today=new Date().toISOString().split('T')[0];
-      const todayLabel=`${new Date().getMonth()+1}月${new Date().getDate()}日`;
+      const td=todayData;
+      const today=td?.today||new Date().toISOString().split('T')[0];
+      const d=new Date(today+'T00:00:00');
+      const todayLabel=`${d.getMonth()+1}月${d.getDate()}日`;
 
       let html=`<div class="habit-card text-center" style="margin-bottom:16px;padding:20px 16px">
-        <p style="font-size:14px;color:var(--color-gray-text);margin-bottom:6px;font-style:italic">${quote}</p>
+        <p style="font-size:14px;color:var(--color-gray-text);font-style:italic">${quote}</p>
       </div>`;
 
-      // My habits today
-      const myHabits=habits.filter(h=>h.type==='shared'||h.owner==='me');
-      const bfHabits=habits.filter(h=>h.type==='shared'||h.owner==='bf');
+      // Show all habits with check-in status for today
+      const myId=SB.myId, partnerId=SB.partnerProfile?.id;
 
+      // My section
       html+=`<div style="margin-bottom:20px">
         <div class="flex items-center gap-2 mb-3">
           <span style="font-size:20px">${myEmoji()}</span>
           <h3 style="font-size:16px;font-weight:700">${displayName('我')}的今日目標</h3>
         </div>`;
-      myHabits.forEach(h=>{
+
+      habits.forEach(h=>{
+        if(h.type==='personal'&&h.owner!=='me')return;
         const done=h.type==='shared'?h.users?.find(u=>u.name==='我')?.done:h.done;
-        html+=todayCard(h,done,true);
+        const myRecords=(td?.records||[]).filter(r=>r.habit_id===h.id&&r.user_id===myId);
+        html+=todayCard(h,done,true,myRecords);
       });
-      if(!myHabits.length)html+='<p class="text-gray-text text-sm text-center py-4">還沒有習慣</p>';
       html+='</div>';
 
+      // Partner section
       html+=`<div style="margin-bottom:20px">
         <div class="flex items-center gap-2 mb-3">
           <span style="font-size:20px">${bfEmoji()}</span>
           <h3 style="font-size:16px;font-weight:700">${displayName('男友')}的今日目標</h3>
         </div>`;
-      bfHabits.forEach(h=>{
+
+      habits.forEach(h=>{
+        if(h.type==='personal'&&h.owner!=='bf')return;
         const done=h.type==='shared'?h.users?.find(u=>u.name==='男友')?.done:h.done;
-        html+=todayCard(h,done,false);
+        const bfRecords=(td?.records||[]).filter(r=>r.habit_id===h.id&&r.user_id===partnerId);
+        html+=todayCard(h,done,false,bfRecords);
       });
-      if(!bfHabits.length)html+='<p class="text-gray-text text-sm text-center py-4">還沒有習慣</p>';
       html+='</div>';
 
       html+='<div style="height:80px"></div>';
       c.innerHTML=html;
     }
 
-    function todayCard(h,done,isMine){
+    function todayCard(h,done,isMine,records){
       const checkStyle=done
         ?'width:28px;height:28px;border-radius:50%;background:var(--color-green);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;border:none;flex-shrink:0'
         :'width:28px;height:28px;border-radius:50%;background:transparent;border:2px solid var(--color-gray-mid);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0';
-      const clickAttr=isMine?`onclick="todayToggle(${h.id})"`:''
-      return`<div class="habit-card" style="margin-bottom:10px;padding:14px 16px;cursor:pointer" ${isMine?`onclick="goDetail(event,${h.id})"`:''}">
+
+      let recordHtml='';
+      if(records&&records.length){
+        records.forEach(r=>{
+          const content=typeof r.content==='string'?JSON.parse(r.content):r.content;
+          const parts=[];
+          Object.entries(content||{}).forEach(([k,v])=>{
+            if(v&&k!=='note')parts.push(`${k}: ${v}`);
+          });
+          if(content?.note)parts.push(content.note);
+          if(parts.length)recordHtml+=`<div style="font-size:13px;color:var(--color-gray-text);margin-top:4px;margin-left:40px">📝 ${parts.join(' · ')}</div>`;
+        });
+      }
+
+      return`<div class="habit-card" style="margin-bottom:10px;padding:14px 16px;cursor:pointer" onclick="goDetail(event,${h.id})">
         <div style="display:flex;align-items:center;gap:12px">
           <button style="${checkStyle}" ${isMine?`onclick="event.stopPropagation();todayToggle(${h.id})"`:''}>${done?'✓':''}</button>
           <span style="font-size:15px;font-weight:600;flex:1;${done?'text-decoration:line-through;opacity:0.5;':''}">${h.name}</span>
           ${h.category?`<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:var(--color-me-light);color:var(--color-gray-text)">${h.category}</span>`:''}
         </div>
+        ${recordHtml}
       </div>`;
     }
 
     window.todayToggle=async function(id){
       await SB.toggleCheckIn(id);
-      await reloadHabits();
+      await Promise.all([reloadHabits(), loadTodayData()]);
       render();
     };
 
