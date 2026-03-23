@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_nMkuM8HcaMIihSOtDbfY7ugpKZQp",
+  "orgId": "team_9v5qJhygJW26LmukGvFdxN1q",
+  "projectName": "habits-app",
+  "settings": {
+    "createdAt": 1774167523634,
+    "framework": "astro",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}
