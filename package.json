@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@astrojs/node": "^10.0.3",
     "@tailwindcss/vite": "^4.2.2",
     "astro": "^6.0.8",
     "bcryptjs": "^3.0.3",
