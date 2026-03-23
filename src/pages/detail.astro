@@ -51,8 +51,8 @@ import Layout from '../layouts/Layout.astro';
   <div id="record-modal" class="modal-backdrop" style="display:none">
     <div class="modal-content" style="max-height:85vh;overflow-y:auto">
       <div class="flex items-center justify-between mb-5">
-        <h2 id="rm-title" class="text-lg font-bold">新增記錄</h2>
-        <span id="autosave-status" style="font-size:11px;flex:1;text-align:right;margin-right:12px;transition:opacity 0.3s"></span>
+        <h2 id="rm-title" class="text-lg font-bold" style="flex:1">新增記錄</h2>
+        <span id="autosave-status" style="font-size:12px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;margin-right:12px;transition:opacity 0.3s"></span>
         <button id="modal-close-record" onclick="closeRM()" class="text-2xl text-gray-text bg-transparent border-none cursor-pointer flex-shrink-0">×</button>
       </div>
       <form id="record-form" class="space-y-4">
