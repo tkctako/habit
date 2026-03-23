@@ -105,8 +105,10 @@ import Layout from '../layouts/Layout.astro';
         let body='';
         const dateDisplay=SB.formatDate(r.date);
         if(tpl==='reading'){
+          // Support both old single quote and new quotes array
+          const quotes=r.quotes||( r.quote?[r.quote]:[]);
           body=`${r.book?`<div class="flex items-center gap-2 mb-2"><span style="color:var(--color-me)">📖</span><span class="font-bold text-sm">${r.book}</span></div>`:''}
-            ${r.quote?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-me-light);border-left:3px solid var(--color-me)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-accent)">✨ 金句</p><p class="text-sm">"${r.quote}"</p></div>`:''}
+            ${quotes.length?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-me-light);border-left:3px solid var(--color-me)"><p class="text-xs font-semibold mb-1" style="color:var(--color-accent)">✨ 金句</p>${quotes.map((q,i)=>`<p class="text-sm mb-0.5"><span style="color:var(--color-me);font-weight:600">${i+1}.</span>&nbsp;&nbsp;"${q}"</p>`).join('')}</div>`:''}
             ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-bf)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-bf)">💬 閱讀心得</p><p class="text-sm">${r.note}</p></div>`:''}`;
         }else if(tpl==='learning'){
           const srcHtml=r.source?(r.source.startsWith('http')?`<a href="${r.source}" target="_blank" style="color:var(--color-bf);text-decoration:underline;word-break:break-all">${r.source}</a>`:r.source):'';
@@ -154,7 +156,20 @@ import Layout from '../layouts/Layout.astro';
         <div><label class="block text-sm font-semibold mb-1">習得例句或單字</label><div id="word-list" class="rounded-xl border p-3 max-h-[250px] overflow-y-auto" style="border-color:var(--color-me)">${lines}</div><div class="flex items-center justify-between mt-1"><p id="word-count" class="text-xs" style="color:var(--color-green)">已輸入 ${words.filter(x=>x).length} 個</p><button type="button" onclick="addWordRow()" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增一行</button></div></div>
         <div><label class="block text-sm font-semibold mb-1">學習筆記</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
       }
-      if(tpl==='reading')return`<div><label class="block text-sm font-semibold mb-1">書名 *</label><input id="rf-book" value="${r.book||''}" class="form-input" placeholder="輸入書名..." required /></div><div><label class="block text-sm font-semibold mb-1">金句</label><textarea id="rf-quote" rows="3" class="form-input" style="resize:vertical" placeholder="摘錄書中令你印象深刻的句子...">${r.quote||''}</textarea></div><div><label class="block text-sm font-semibold mb-1">閱讀心得</label><textarea id="rf-note" rows="4" class="form-input" style="resize:vertical" placeholder="寫下你的閱讀心得與感想...">${r.note||''}</textarea></div>`;
+      if(tpl==='reading'){
+        // Support both old string format and new array format for quotes
+        let quotes=[];
+        if(Array.isArray(r.quotes))quotes=r.quotes;
+        else if(r.quote)quotes=[r.quote];
+        const rowCount=Math.max(quotes.length+2,3);
+        let lines='';
+        for(let i=0;i<rowCount;i++){
+          lines+=`<div class="flex items-center gap-2 mb-1 quote-row"><span class="text-sm font-bold" style="color:var(--color-me);min-width:24px">${i+1}.</span><input type="text" data-quote-input value="${(quotes[i]||'').replace(/"/g,'&quot;')}" class="form-input flex-1" style="padding:8px 12px" placeholder="摘錄金句..." /></div>`;
+        }
+        return`<div><label class="block text-sm font-semibold mb-1">書名 *</label><input id="rf-book" value="${r.book||''}" class="form-input" placeholder="輸入書名..." required /></div>
+        <div><label class="block text-sm font-semibold mb-1">✨ 金句</label><div id="quote-list" class="rounded-xl border p-3 max-h-[250px] overflow-y-auto" style="border-color:var(--color-me)">${lines}</div><div class="flex items-center justify-between mt-1"><p id="quote-count" class="text-xs" style="color:var(--color-green)">已輸入 ${quotes.filter(x=>x).length} 句</p><button type="button" onclick="addQuoteRowR()" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增一句</button></div></div>
+        <div><label class="block text-sm font-semibold mb-1">閱讀心得</label><textarea id="rf-note" rows="4" class="form-input" style="resize:vertical" placeholder="寫下你的閱讀心得與感想...">${r.note||''}</textarea></div>`;
+      }
       if(tpl==='exercise')return`<div><label class="block text-sm font-semibold mb-1">運動類型</label><input id="rf-type" value="${r.type||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">時長</label><input id="rf-duration" value="${r.duration||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">備註</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
       return`<div><label class="block text-sm font-semibold mb-1">備註</label><textarea id="rf-note" rows="3" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
     }
@@ -165,6 +180,14 @@ import Layout from '../layouts/Layout.astro';
       const div=document.createElement('div');
       div.className='flex items-center gap-2 mb-1 gratitude-row';
       div.innerHTML=`<span class="text-sm font-bold" style="color:var(--color-me);min-width:24px">${count+1}.</span><input type="text" data-gratitude-input value="" class="form-input flex-1" style="padding:8px 12px" placeholder="感恩的事..." />`;
+      list.appendChild(div);div.querySelector('input').focus();setupEnterNav();updateCounts();
+    };
+    window.addQuoteRowR=function(){
+      const list=document.getElementById('quote-list');
+      const count=list.querySelectorAll('.quote-row').length;
+      const div=document.createElement('div');
+      div.className='flex items-center gap-2 mb-1 quote-row';
+      div.innerHTML=`<span class="text-sm font-bold" style="color:var(--color-me);min-width:24px">${count+1}.</span><input type="text" data-quote-input value="" class="form-input flex-1" style="padding:8px 12px" placeholder="摘錄金句..." />`;
       list.appendChild(div);div.querySelector('input').focus();setupEnterNav();updateCounts();
     };
     window.addWordRow=function(){
@@ -181,9 +204,11 @@ import Layout from '../layouts/Layout.astro';
       if(ic){let c=0;document.querySelectorAll('[data-gratitude-input]').forEach(el=>{if(el.value.trim())c++;});ic.textContent='已輸入 '+c+' 個';}
       const wc=document.getElementById('word-count');
       if(wc){let c=0;document.querySelectorAll('[data-word-input]').forEach(el=>{if(el.value.trim())c++;});wc.textContent='已輸入 '+c+' 個';}
+      const qc=document.getElementById('quote-count');
+      if(qc){let c=0;document.querySelectorAll('[data-quote-input]').forEach(el=>{if(el.value.trim())c++;});qc.textContent='已輸入 '+c+' 句';}
     }
     function setupEnterNav(){
-      document.querySelectorAll('[data-gratitude-input],[data-word-input]').forEach((el,idx,all)=>{
+      document.querySelectorAll('[data-gratitude-input],[data-word-input],[data-quote-input]').forEach((el,idx,all)=>{
         el.removeEventListener('keydown',el._kh);
         el._kh=e=>{if(e.key==='Enter'){e.preventDefault();if(idx+1<all.length)all[idx+1].focus();}};
         el.addEventListener('keydown',el._kh);
@@ -225,7 +250,12 @@ import Layout from '../layouts/Layout.astro';
       const tpl=getTpl(habit.category);
       const dateVal=document.getElementById('rf-date').value;
       let content={};
-      if(tpl==='reading'){content.book=document.getElementById('rf-book').value;content.quote=document.getElementById('rf-quote').value;content.note=document.getElementById('rf-note').value;}
+      if(tpl==='reading'){
+        content.book=document.getElementById('rf-book').value;
+        const q=[];document.querySelectorAll('[data-quote-input]').forEach(el=>{const v=el.value.trim();if(v)q.push(v);});
+        content.quotes=q;
+        content.note=document.getElementById('rf-note').value;
+      }
       else if(tpl==='learning'){
         const w=[];document.querySelectorAll('[data-word-input]').forEach(el=>{const v=el.value.trim();if(v)w.push(v);});
         content.topic=document.getElementById('rf-topic').value.trim();
