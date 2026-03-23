@@ -236,7 +236,7 @@ import Layout from '../layouts/Layout.astro';
         }
         return`<div><label class="block text-sm font-semibold mb-1">學習主題</label><input id="rf-topic" value="${r.topic||''}" class="form-input" placeholder="今天學了什麼？" /></div>
         <div><label class="block text-sm font-semibold mb-1">資料來源</label><input id="rf-source" value="${r.source||''}" class="form-input" placeholder="網址、書名或其他來源..." /></div>
-        <div><label class="block text-sm font-semibold mb-1">習得例句</label><div id="word-list" class="rounded-xl border p-3 max-h-[250px] overflow-y-auto" style="border-color:var(--color-me)">${lines}</div><div class="flex items-center justify-between mt-1"><p id="word-count" class="text-xs" style="color:var(--color-green)">已輸入 ${words.filter(x=>x).length} 句</p><button type="button" onclick="addWordRow()" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增一行</button></div></div>
+        <div><div class="flex items-center justify-between mb-1"><label class="block text-sm font-semibold">習得例句</label><button type="button" onclick="copySentences()" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">📋 複製全部</button></div><div id="word-list" class="rounded-xl border p-3 max-h-[250px] overflow-y-auto" style="border-color:var(--color-me)">${lines}</div><div class="flex items-center justify-between mt-1"><p id="word-count" class="text-xs" style="color:var(--color-green)">已輸入 ${words.filter(x=>x).length} 句</p><button type="button" onclick="addWordRow()" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增一行</button></div></div>
         <div><label class="block text-sm font-semibold mb-1">學習筆記</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
       }
       if(tpl==='reading'){
@@ -277,6 +277,14 @@ import Layout from '../layouts/Layout.astro';
       div.className='flex items-center gap-2 mb-1 quote-row';
       div.innerHTML=`<span class="text-sm font-bold" style="color:var(--color-me);min-width:24px">${count+1}.</span><input type="text" data-quote-input value="" class="form-input flex-1" style="padding:8px 12px" placeholder="摘錄金句..." />`;
       list.appendChild(div);div.querySelector('input').focus();setupEnterNav();updateCounts();
+    };
+    window.copySentences=function(){
+      const items=[];
+      document.querySelectorAll('[data-word-sentence]').forEach((el,i)=>{const v=el.value.trim();if(v)items.push(`${items.length+1}. ${v}`);});
+      if(!items.length){alert('沒有例句可複製');return;}
+      navigator.clipboard.writeText(items.join('\n')).then(()=>{
+        const btn=event.target;btn.textContent='✅ 已複製';setTimeout(()=>btn.textContent='📋 複製全部',1500);
+      });
     };
     window.addWordRow=function(){
       const list=document.getElementById('word-list');
