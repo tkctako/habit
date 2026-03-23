@@ -31,14 +31,12 @@ export async function POST({ request }) {
   if (action === 'add') {
     const { habitId, date, content } = body;
     await pool.query('INSERT INTO records (habit_id,user_id,date,content) VALUES ($1,$2,$3,$4)', [habitId, u.id, date, JSON.stringify(content)]);
-    const today = new Date().toISOString().split('T')[0];
-    if (date === today) {
-      const { rows } = await pool.query('SELECT * FROM check_ins WHERE habit_id=$1 AND user_id=$2 AND date=$3', [habitId, u.id, today]);
-      if (!rows.length) {
-        await pool.query('INSERT INTO check_ins (habit_id,user_id,date,done) VALUES ($1,$2,$3,true)', [habitId, u.id, today]);
-      } else if (!rows[0].done) {
-        await pool.query('UPDATE check_ins SET done=true WHERE id=$1', [rows[0].id]);
-      }
+    // Auto check-in for the record's date (not just today)
+    const { rows } = await pool.query('SELECT * FROM check_ins WHERE habit_id=$1 AND user_id=$2 AND date=$3', [habitId, u.id, date]);
+    if (!rows.length) {
+      await pool.query('INSERT INTO check_ins (habit_id,user_id,date,done) VALUES ($1,$2,$3,true)', [habitId, u.id, date]);
+    } else if (!rows[0].done) {
+      await pool.query('UPDATE check_ins SET done=true WHERE id=$1', [rows[0].id]);
     }
     return json({ ok: true });
   }
