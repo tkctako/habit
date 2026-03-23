@@ -41,13 +41,50 @@ export async function POST({ request }) {
 
   if (action === 'update') {
     const { id, date, content } = body;
+    // Get old record to know old date and habit_id
+    const { rows: old } = await pool.query('SELECT * FROM records WHERE id=$1 AND user_id=$2', [id, u.id]);
+    if (!old.length) return json({ error: 'Not found' }, 404);
+    const oldRec = old[0];
     await pool.query('UPDATE records SET date=$1,content=$2 WHERE id=$3 AND user_id=$4', [date, JSON.stringify(content), id, u.id]);
+
+    // If date changed, move check_in from old date to new date
+    if (oldRec.date !== date) {
+      // Remove old check_in if no other records exist on that date for this habit+user
+      const { rows: remaining } = await pool.query(
+        'SELECT id FROM records WHERE habit_id=$1 AND user_id=$2 AND date=$3 AND id!=$4',
+        [oldRec.habit_id, u.id, oldRec.date, id]
+      );
+      if (!remaining.length) {
+        await pool.query('DELETE FROM check_ins WHERE habit_id=$1 AND user_id=$2 AND date=$3', [oldRec.habit_id, u.id, oldRec.date]);
+      }
+      // Create check_in on new date (unchecked)
+      const { rows: existing } = await pool.query(
+        'SELECT id FROM check_ins WHERE habit_id=$1 AND user_id=$2 AND date=$3',
+        [oldRec.habit_id, u.id, date]
+      );
+      if (!existing.length) {
+        await pool.query('INSERT INTO check_ins (habit_id,user_id,date,done) VALUES ($1,$2,$3,false)', [oldRec.habit_id, u.id, date]);
+      }
+    }
     return json({ ok: true });
   }
 
   if (action === 'delete') {
     const { id } = body;
+    // Get record info before deleting
+    const { rows: rec } = await pool.query('SELECT * FROM records WHERE id=$1 AND user_id=$2', [id, u.id]);
     await pool.query('DELETE FROM records WHERE id=$1 AND user_id=$2', [id, u.id]);
+    // Remove check_in if no other records exist on that date for this habit+user
+    if (rec.length) {
+      const r = rec[0];
+      const { rows: remaining } = await pool.query(
+        'SELECT id FROM records WHERE habit_id=$1 AND user_id=$2 AND date=$3',
+        [r.habit_id, u.id, r.date]
+      );
+      if (!remaining.length) {
+        await pool.query('DELETE FROM check_ins WHERE habit_id=$1 AND user_id=$2 AND date=$3', [r.habit_id, u.id, r.date]);
+      }
+    }
     return json({ ok: true });
   }
 
