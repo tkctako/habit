@@ -128,6 +128,9 @@
       const d=new Date();const date=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
       return api('records',{action:'today',date});
     },
+    async loadDayRecords(date){
+      return api('records',{action:'today',date});
+    },
 
     async loadAustralia(){return api('australia',{action:'list'});},
     async addAustralia(data){return api('australia',{action:'add',...data});},

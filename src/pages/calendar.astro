@@ -162,9 +162,21 @@ import Layout from '../layouts/Layout.astro';
         :'<span style="font-size:12px;font-weight:600;padding:2px 10px;border-radius:99px;background:var(--color-gray-mid);color:var(--color-gray-text)">✕ 未完成</span>';
     }
 
-    window.showDay=function(day){
+    function getRecordSummary(h,content){
+      if(!content)return'';
+      if(h.category==='學習') return content.topic||'';
+      if(h.category==='感恩紀錄') return '感恩的事';
+      if(h.category==='運動'){
+        const p=[];if(content.type)p.push(content.type);if(content.duration)p.push(content.duration);
+        return p.join(' / ');
+      }
+      return content.note||'';
+    }
+
+    window.showDay=async function(day){
       selectedDay=day;
       renderCalendar();
+      const dateStr=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
       const data=getDayData(viewYear,viewMonth,day);
       const shared=data.filter(h=>h.isShared);
       const personal=data.filter(h=>!h.isShared);
@@ -177,6 +189,16 @@ import Layout from '../layouts/Layout.astro';
       const myPct=myItems.length?Math.round(myDone/myItems.length*100):0;
       const bfPct=bfItems.length?Math.round(bfDone/bfItems.length*100):0;
 
+      // Load records for this day
+      let dayRecords=[];
+      try{
+        const rd=await SB.loadDayRecords(dateStr);
+        dayRecords=(rd?.records||[]).map(r=>{
+          const content=typeof r.content==='string'?JSON.parse(r.content):r.content;
+          return{...r,content};
+        });
+      }catch(e){}
+
       let html=`<div class="flex items-center gap-2 mb-3"><span class="text-lg cursor-pointer" onclick="document.getElementById('day-detail').innerHTML=''">‹</span><h3 class="font-bold">${viewYear}年${viewMonth+1}月${day}日 星期${wk[dt.getDay()]}</h3></div>
         <div class="grid grid-cols-2 gap-3 mb-4">
           <div class="bg-card rounded-2xl p-4 shadow-sm" style="border:1px solid var(--color-me-light)"><p class="text-sm mb-1">${myEmoji()} ${displayName('我')}</p><p class="text-2xl font-bold" style="color:var(--color-me)">${myPct}%</p><p class="text-xs text-gray-text">${myDone} / ${myItems.length} 完成</p></div>
@@ -188,10 +210,16 @@ import Layout from '../layouts/Layout.astro';
         html+='<p class="text-xs text-gray-text mb-2 font-semibold">共同習慣</p>';
         shared.forEach(h=>{
           const allDone=h.myDone&&h.bfDone;
+          const habitObj=monthHabits.find(mh=>mh.name===h.name);
+          const recs=habitObj?dayRecords.filter(r=>r.habit_id===habitObj.id):[];
           html+=`<div class="habit-card" style="margin-bottom:12px"><h4 style="font-size:15px;font-weight:700;font-family:'Noto Sans TC',sans-serif;margin-bottom:10px">${h.name}</h4>`;
           html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:10px;margin-bottom:5px;background:var(--color-me-light)"><span style="font-size:14px">${myEmoji()} ${displayName('我')}</span>${statusTag(h.myDone)}</div>`;
           html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:10px;background:var(--color-gray-light)"><span style="font-size:14px">${bfEmoji()} ${displayName('男友')}</span>${statusTag(h.bfDone)}</div>`;
           if(allDone)html+=`<div class="text-center py-2 rounded-xl text-sm mt-2" style="background:var(--color-me-light)">🎉 兩人都完成了！</div>`;
+          recs.forEach(r=>{
+            const s=habitObj?getRecordSummary(habitObj,r.content):'';
+            if(s)html+=`<div style="font-size:13px;color:var(--color-gray-text);margin-top:8px;padding:8px 12px;border-radius:10px;background:var(--color-gray-light)">${r.emoji||''} ${r.display_name||''}: ${s}</div>`;
+          });
           html+='</div>';
         });
       }
@@ -201,8 +229,14 @@ import Layout from '../layouts/Layout.astro';
           const emoji=h.owner==='me'?myEmoji():bfEmoji();
           const name=h.owner==='me'?displayName('我'):displayName('男友');
           const done=h.owner==='me'?h.myDone:h.bfDone;
+          const habitObj=monthHabits.find(mh=>mh.name===h.name);
+          const recs=habitObj?dayRecords.filter(r=>r.habit_id===habitObj.id):[];
           html+=`<div class="habit-card" style="margin-bottom:12px"><h4 style="font-size:15px;font-weight:700;font-family:'Noto Sans TC',sans-serif;margin-bottom:10px">${h.name}</h4>`;
           html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:10px;background:${h.owner==='me'?'var(--color-me-light)':'var(--color-gray-light)'}"><span style="font-size:14px">${emoji} ${name}</span>${statusTag(done)}</div>`;
+          recs.forEach(r=>{
+            const s=habitObj?getRecordSummary(habitObj,r.content):'';
+            if(s)html+=`<div style="font-size:13px;color:var(--color-gray-text);margin-top:8px;padding:8px 12px;border-radius:10px;background:var(--color-gray-light)">${s}</div>`;
+          });
           html+='</div>';
         });
       }
