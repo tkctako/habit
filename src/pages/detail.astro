@@ -378,7 +378,7 @@ import Layout from '../layouts/Layout.astro';
       renderRecords();
     };
 
-    window.closeRM=()=>{document.getElementById('record-modal').style.display='none';editRecordId=null;};
+    window.closeRM=()=>{clearTimeout(autoSaveTimer);document.getElementById('record-modal').style.display='none';editRecordId=null;const s=document.getElementById('autosave-status');if(s)s.textContent='';};
     document.getElementById('add-record-btn').addEventListener('click',()=>{editRecordId=null;openRM(null);});
     window.openEditR=function(id){
       editRecordId=id;
@@ -429,8 +429,7 @@ import Layout from '../layouts/Layout.astro';
       await reloadRecords();renderRecords();
     };
 
-    document.getElementById('record-form').addEventListener('submit',async function(e){
-      e.preventDefault();
+    function gatherContent(){
       const tpl=getTpl(habit.category);
       let content={};
       if(tpl==='reading'){
@@ -445,8 +444,7 @@ import Layout from '../layouts/Layout.astro';
         content.podcastName=document.getElementById('rf-podcast-name').value.trim();
         content.podcastLink=document.getElementById('rf-podcast-link').value.trim();
         content.note=document.getElementById('rf-note').value;
-      }
-      else if(tpl==='learning'){
+      }else if(tpl==='learning'){
         const w=[];const sentences=document.querySelectorAll('[data-word-sentence]');const translations=document.querySelectorAll('[data-word-translation]');sentences.forEach((el,i)=>{const s=el.value.trim();if(s)w.push({sentence:s,translation:translations[i]?.value.trim()||''});});
         content.topic=document.getElementById('rf-topic').value.trim();
         content.source=document.getElementById('rf-source').value.trim();
@@ -456,6 +454,48 @@ import Layout from '../layouts/Layout.astro';
         const items=[];document.querySelectorAll('[data-gratitude-input]').forEach(el=>{const v=el.value.trim();if(v)items.push(v);});
         content.items=items;content.note=document.getElementById('rf-note').value;
       }else{content.note=document.getElementById('rf-note').value;}
+      return content;
+    }
+
+    // Auto-save (only when editing existing records)
+    let autoSaveTimer=null,autoSaving=false;
+    function showAutoSaveStatus(text,color){
+      let el=document.getElementById('autosave-status');
+      if(!el){
+        el=document.createElement('span');el.id='autosave-status';
+        el.style.cssText='font-size:11px;margin-left:8px;transition:opacity 0.3s';
+        document.getElementById('rm-title').parentElement.appendChild(el);
+      }
+      el.style.color=color||'var(--color-gray-text)';
+      el.textContent=text;el.style.opacity='1';
+      if(text==='✅ 已自動儲存')setTimeout(()=>{el.style.opacity='0';},2000);
+    }
+    function triggerAutoSave(){
+      if(editRecordId===null)return; // only auto-save edits
+      clearTimeout(autoSaveTimer);
+      showAutoSaveStatus('● 未儲存','var(--color-red)');
+      autoSaveTimer=setTimeout(async()=>{
+        if(editRecordId===null||autoSaving)return;
+        autoSaving=true;
+        showAutoSaveStatus('⏳ 儲存中...','var(--color-gray-text)');
+        try{
+          const content=gatherContent();
+          const dateVal=document.getElementById('rf-date').value;
+          await SB.updateRecord(editRecordId,dateVal,content);
+          showAutoSaveStatus('✅ 已自動儲存','var(--color-green)');
+        }catch(e){
+          showAutoSaveStatus('❌ 儲存失敗','var(--color-red)');
+        }
+        autoSaving=false;
+      },3000);
+    }
+    // Listen for changes in modal
+    document.getElementById('record-modal').addEventListener('input',triggerAutoSave);
+
+    document.getElementById('record-form').addEventListener('submit',async function(e){
+      e.preventDefault();
+      clearTimeout(autoSaveTimer);
+      const content=gatherContent();
 
       if(editRecordId!==null){
         const dateVal=document.getElementById('rf-date').value;
