@@ -30,13 +30,14 @@ import Layout from '../layouts/Layout.astro';
 
   <div class="px-4 pt-4 pb-2">
     <div class="flex rounded-2xl overflow-hidden border border-gray-mid">
-      <button id="tab-shared" class="flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 tab-active rounded-2xl transition-all">♡ 共同習慣</button>
-      <button id="tab-all" class="flex-1 py-3 text-sm font-semibold tab-inactive rounded-2xl transition-all">全部習慣</button>
+      <button id="tab-today" class="flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 tab-active rounded-2xl transition-all">🎯 今日目標</button>
+      <button id="tab-shared" class="flex-1 py-3 text-sm font-semibold tab-inactive rounded-2xl transition-all">♡ 共同</button>
+      <button id="tab-all" class="flex-1 py-3 text-sm font-semibold tab-inactive rounded-2xl transition-all">全部</button>
     </div>
   </div>
 
   <div id="habits-container" class="px-4 pb-3 space-y-3.5"></div>
-  <div id="add-wrap" class="px-4 pb-28">
+  <div id="add-wrap" class="px-4 pb-28" style="display:none">
     <button id="add-btn" class="add-habit-btn">+ 新增共同習慣</button>
   </div>
 
@@ -102,16 +103,27 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <script is:inline>
-    let currentTab='shared',editingId=null,deletingId=null,habitsCache=[];
+    let currentTab='today',editingId=null,deletingId=null,habitsCache=[];
+
+    const QUOTES=[
+      '「每一個小習慣，都是通往更好自己的一步」💪',
+      '「一起努力的日子，都是最珍貴的」💕',
+      '「堅持不是因為容易，而是因為值得」✨',
+      '「今天的你，比昨天更強大」🌟',
+      '「兩個人一起堅持，力量加倍」♡',
+      '「不必完美，但求進步」🌱',
+      '「每天進步 1%，一年後你會驚艷自己」📈',
+      '「好習慣是送給未來自己最好的禮物」🎁',
+      '「一起變好，是最浪漫的事」🌹',
+      '「你的堅持，我都看得見」👀💛',
+    ];
 
     // ===== Auth + Init =====
     async function appInit(){
-      // Instant render from cache
       if(SB.initFromCache()){
         updateGreeting();
         document.getElementById('auth-guard').style.display='none';
       }
-      // Full init in background
       const ok=await SB.init();
       if(!ok||!SB.myProfile){window.location.href='/';return;}
       updateGreeting();
@@ -122,7 +134,6 @@ import Layout from '../layouts/Layout.astro';
           document.getElementById('invite-banner').style.display='';
         }
       }
-      // Load habits + cover in parallel
       await Promise.all([reloadHabits(), window._loadBannerCover?.()]);
       document.getElementById('auth-guard').style.display='none';
       render();
@@ -156,8 +167,6 @@ import Layout from '../layouts/Layout.astro';
       if(name){await SB.updateDisplayName(name);updateGreeting();render();}
       document.getElementById('user-modal').style.display='none';
     });
-
-    // Password change
     document.getElementById('pw-form').addEventListener('submit',async function(e){
       e.preventDefault();
       const pw=document.getElementById('pw-new').value;
@@ -184,7 +193,16 @@ import Layout from '../layouts/Layout.astro';
       let scale=1,posX=0,posY=0,dragging=false,startX=0,startY=0,lx=0,ly=0;
       let saveTimer=null;
       function apply(){imgEl.style.transform='scale('+scale+') translate('+posX+'px,'+posY+'px)';}
-      function debounceSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{SB.saveCover(COVER_ID,imgEl.src,Math.round(scale*100),Math.round(posX),Math.round(posY));},800);}
+      function debounceSave(){
+        clearTimeout(saveTimer);
+        saveTimer=setTimeout(()=>{
+          // Only save URL covers, not base64 (too large)
+          const src=imgEl.src;
+          if(src&&!src.startsWith('data:')){
+            SB.saveCover(COVER_ID,src,Math.round(scale*100),Math.round(posX),Math.round(posY));
+          }
+        },800);
+      }
       zoomEl.addEventListener('input',function(e){e.stopPropagation();scale=parseInt(this.value)/100;apply();debounceSave();});
       imgEl.addEventListener('mousedown',function(e){e.preventDefault();e.stopPropagation();dragging=true;startX=e.clientX;startY=e.clientY;lx=posX;ly=posY;});
       document.addEventListener('mousemove',function(e){if(!dragging)return;posX=lx+(e.clientX-startX)/scale;posY=ly+(e.clientY-startY)/scale;apply();});
@@ -192,10 +210,15 @@ import Layout from '../layouts/Layout.astro';
       imgEl.addEventListener('touchstart',function(e){dragging=true;startX=e.touches[0].clientX;startY=e.touches[0].clientY;lx=posX;ly=posY;},{passive:true});
       document.addEventListener('touchmove',function(e){if(!dragging)return;posX=lx+(e.touches[0].clientX-startX)/scale;posY=ly+(e.touches[0].clientY-startY)/scale;apply();},{passive:true});
       document.addEventListener('touchend',function(){if(dragging){dragging=false;debounceSave();}});
-      function setCover(src){imgEl.src=src;scale=1;posX=0;posY=0;zoomEl.value=100;apply();SB.saveCover(COVER_ID,src,100,0,0);}
+      function setCover(src){
+        imgEl.src=src;scale=1;posX=0;posY=0;zoomEl.value=100;apply();
+        // Only save URL covers to DB
+        if(!src.startsWith('data:')){
+          SB.saveCover(COVER_ID,src,100,0,0);
+        }
+      }
       document.getElementById('banner-file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setCover(ev.target.result);r.readAsDataURL(f);});
       document.getElementById('banner-url-btn').addEventListener('click',()=>{const url=prompt('輸入圖片網址：');if(url)setCover(url);});
-      // Load cover from DB
       window._loadBannerCover=async function(){
         const c=await SB.loadCover(COVER_ID);
         if(c&&c.image_url){imgEl.src=c.image_url;scale=(c.zoom||100)/100;posX=c.pos_x||0;posY=c.pos_y||0;zoomEl.value=c.zoom||100;apply();}
@@ -205,10 +228,74 @@ import Layout from '../layouts/Layout.astro';
     // ===== Render =====
     function render(){
       const habits=getHabits(),c=document.getElementById('habits-container'),aw=document.getElementById('add-wrap');
-      if(currentTab==='shared'){renderShared(habits,c);aw.style.display='block';document.getElementById('add-btn').textContent='+ 新增共同習慣';}
+      if(currentTab==='today'){renderToday(habits,c);aw.style.display='none';}
+      else if(currentTab==='shared'){renderShared(habits,c);aw.style.display='block';document.getElementById('add-btn').textContent='+ 新增共同習慣';}
       else{renderAll(habits,c);aw.style.display='none';}
     }
 
+    // ===== TODAY TAB =====
+    function renderToday(habits,c){
+      const quote=QUOTES[Math.floor(Math.random()*QUOTES.length)];
+      const today=new Date().toISOString().split('T')[0];
+      const todayLabel=`${new Date().getMonth()+1}月${new Date().getDate()}日`;
+
+      let html=`<div class="habit-card text-center" style="margin-bottom:16px;padding:20px 16px">
+        <p style="font-size:14px;color:var(--color-gray-text);margin-bottom:6px;font-style:italic">${quote}</p>
+      </div>`;
+
+      // My habits today
+      const myHabits=habits.filter(h=>h.type==='shared'||h.owner==='me');
+      const bfHabits=habits.filter(h=>h.type==='shared'||h.owner==='bf');
+
+      html+=`<div style="margin-bottom:20px">
+        <div class="flex items-center gap-2 mb-3">
+          <span style="font-size:20px">${myEmoji()}</span>
+          <h3 style="font-size:16px;font-weight:700">${displayName('我')}的今日目標</h3>
+        </div>`;
+      myHabits.forEach(h=>{
+        const done=h.type==='shared'?h.users?.find(u=>u.name==='我')?.done:h.done;
+        html+=todayCard(h,done,true);
+      });
+      if(!myHabits.length)html+='<p class="text-gray-text text-sm text-center py-4">還沒有習慣</p>';
+      html+='</div>';
+
+      html+=`<div style="margin-bottom:20px">
+        <div class="flex items-center gap-2 mb-3">
+          <span style="font-size:20px">${bfEmoji()}</span>
+          <h3 style="font-size:16px;font-weight:700">${displayName('男友')}的今日目標</h3>
+        </div>`;
+      bfHabits.forEach(h=>{
+        const done=h.type==='shared'?h.users?.find(u=>u.name==='男友')?.done:h.done;
+        html+=todayCard(h,done,false);
+      });
+      if(!bfHabits.length)html+='<p class="text-gray-text text-sm text-center py-4">還沒有習慣</p>';
+      html+='</div>';
+
+      html+='<div style="height:80px"></div>';
+      c.innerHTML=html;
+    }
+
+    function todayCard(h,done,isMine){
+      const checkStyle=done
+        ?'width:28px;height:28px;border-radius:50%;background:var(--color-green);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;border:none;flex-shrink:0'
+        :'width:28px;height:28px;border-radius:50%;background:transparent;border:2px solid var(--color-gray-mid);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0';
+      const clickAttr=isMine?`onclick="todayToggle(${h.id})"`:''
+      return`<div class="habit-card" style="margin-bottom:10px;padding:14px 16px;cursor:pointer" ${isMine?`onclick="goDetail(event,${h.id})"`:''}">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button style="${checkStyle}" ${isMine?`onclick="event.stopPropagation();todayToggle(${h.id})"`:''}>${done?'✓':''}</button>
+          <span style="font-size:15px;font-weight:600;flex:1;${done?'text-decoration:line-through;opacity:0.5;':''}">${h.name}</span>
+          ${h.category?`<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:var(--color-me-light);color:var(--color-gray-text)">${h.category}</span>`:''}
+        </div>
+      </div>`;
+    }
+
+    window.todayToggle=async function(id){
+      await SB.toggleCheckIn(id);
+      await reloadHabits();
+      render();
+    };
+
+    // ===== SHARED TAB =====
     function renderShared(habits,c){
       const shared=habits.filter(h=>h.type==='shared');
       if(!shared.length){c.innerHTML='<div class="text-center py-12 text-gray-text">還沒有共同習慣</div>';return;}
@@ -233,6 +320,7 @@ import Layout from '../layouts/Layout.astro';
       }).join('');
     }
 
+    // ===== ALL TAB =====
     function renderAll(habits,c){
       const myShared=habits.filter(h=>h.type==='shared').map(h=>{
         const me=h.users.find(u=>u.name==='我');
@@ -270,31 +358,21 @@ import Layout from '../layouts/Layout.astro';
 
     window.goDetail=function(e,id){if(e.target.closest('button'))return;window.location.href='/detail?id='+id;};
 
-    window.toggleShared=async function(id,name){
-      if(name!=='我')return;
-      await SB.toggleCheckIn(id);
-      await reloadHabits();render();
-    };
-    window.toggleAll=async function(id){
-      await SB.toggleCheckIn(id);
-      await reloadHabits();render();
-    };
-
-    // Tabs
-    document.getElementById('tab-shared').addEventListener('click',()=>{
-      currentTab='shared';
-      document.getElementById('tab-shared').className='flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 tab-active rounded-2xl transition-all';
-      document.getElementById('tab-all').className='flex-1 py-3 text-sm font-semibold tab-inactive rounded-2xl transition-all';
+    // ===== Tabs =====
+    function setTab(tab){
+      currentTab=tab;
+      ['today','shared','all'].forEach(t=>{
+        const el=document.getElementById('tab-'+t);
+        if(t===tab)el.className='flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 tab-active rounded-2xl transition-all';
+        else el.className='flex-1 py-3 text-sm font-semibold tab-inactive rounded-2xl transition-all';
+      });
       render();
-    });
-    document.getElementById('tab-all').addEventListener('click',()=>{
-      currentTab='all';
-      document.getElementById('tab-all').className='flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 tab-active rounded-2xl transition-all';
-      document.getElementById('tab-shared').className='flex-1 py-3 text-sm font-semibold tab-inactive rounded-2xl transition-all';
-      render();
-    });
+    }
+    document.getElementById('tab-today').addEventListener('click',()=>setTab('today'));
+    document.getElementById('tab-shared').addEventListener('click',()=>setTab('shared'));
+    document.getElementById('tab-all').addEventListener('click',()=>setTab('all'));
 
-    // Modals
+    // ===== Modals =====
     const modal=document.getElementById('habit-modal'),delModal=document.getElementById('delete-modal');
     document.getElementById('add-btn').addEventListener('click',()=>{editingId=null;document.getElementById('modal-title').textContent='新增習慣';document.getElementById('modal-submit').textContent='新增';document.getElementById('hf-name').value='';document.getElementById('hf-type').value='shared';document.getElementById('hf-cat').value='一般習慣';modal.style.display='flex';});
     window.openAddPersonal=function(){editingId=null;document.getElementById('modal-title').textContent='新增習慣';document.getElementById('modal-submit').textContent='新增';document.getElementById('hf-name').value='';document.getElementById('hf-type').value='personal';document.getElementById('hf-cat').value='一般習慣';modal.style.display='flex';};

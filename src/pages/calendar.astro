@@ -8,16 +8,6 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <div class="px-4 pt-4 pb-24">
-    <div class="cover-container mb-5">
-      <img id="cal-cover-img" draggable="false" style="display:none" />
-      <span id="cal-cover-text" class="text-gray-text text-sm absolute inset-0 flex items-center justify-center z-5">📷 添加封面圖片</span>
-      <div class="cover-controls">
-        <input type="range" min="100" max="300" value="100" class="cover-zoom" id="cal-zoom" />
-        <label class="cursor-pointer">📷<input type="file" accept="image/*" id="cal-file" class="hidden" /></label>
-        <button id="cal-url-btn">🔗</button>
-      </div>
-    </div>
-
     <div class="bg-card rounded-2xl p-5 shadow-sm mb-4" style="border:1px solid var(--color-gray-mid)">
       <div class="flex items-center justify-between mb-5">
         <button id="prev-month" class="text-2xl text-gray-text px-2 bg-transparent border-none cursor-pointer">‹</button>
@@ -85,33 +75,7 @@ import Layout from '../layouts/Layout.astro';
       return n;
     }
 
-    // Cover
-    (function(){
-      const imgEl=document.getElementById('cal-cover-img'),zoomEl=document.getElementById('cal-zoom');
-      let scale=100,posX=0,posY=0,dragging=false,startX=0,startY=0,lx=0,ly=0;
-      function apply(){imgEl.style.transform='scale('+(scale/100)+') translate('+posX+'px,'+posY+'px)';}
-      zoomEl.addEventListener('input',function(e){e.stopPropagation();scale=parseInt(this.value);apply();});
-      imgEl.addEventListener('mousedown',function(e){e.preventDefault();e.stopPropagation();dragging=true;startX=e.clientX;startY=e.clientY;lx=posX;ly=posY;});
-      document.addEventListener('mousemove',function(e){if(!dragging)return;posX=lx+(e.clientX-startX)/(scale/100);posY=ly+(e.clientY-startY)/(scale/100);apply();});
-      document.addEventListener('mouseup',function(){dragging=false;});
-      imgEl.addEventListener('touchstart',function(e){dragging=true;startX=e.touches[0].clientX;startY=e.touches[0].clientY;lx=posX;ly=posY;},{passive:true});
-      document.addEventListener('touchmove',function(e){if(!dragging)return;posX=lx+(e.touches[0].clientX-startX)/(scale/100);posY=ly+(e.touches[0].clientY-startY)/(scale/100);apply();},{passive:true});
-      document.addEventListener('touchend',function(){dragging=false;});
-      const CAL_COVER_ID='calendar';
-      let saveTimer=null;
-      function debounceSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{SB.saveCover(CAL_COVER_ID,imgEl.src,Math.round(scale*100),Math.round(posX),Math.round(posY));},800);}
-      document.addEventListener('mouseup',function(){if(dragging){dragging=false;debounceSave();}});
-      document.addEventListener('touchend',function(){if(dragging){dragging=false;debounceSave();}});
-      zoomEl.addEventListener('input',function(){debounceSave();});
-      function setCov(src){imgEl.src=src;imgEl.style.display='block';document.getElementById('cal-cover-text').style.display='none';scale=100;posX=0;posY=0;zoomEl.value=100;apply();SB.saveCover(CAL_COVER_ID,src,100,0,0);}
-      document.getElementById('cal-file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setCov(ev.target.result);r.readAsDataURL(f);});
-      document.getElementById('cal-url-btn').addEventListener('click',()=>{const url=prompt('輸入圖片網址：');if(url)setCov(url);});
-      window._loadCalCover=async function(){
-        const c=await SB.loadCover(CAL_COVER_ID);
-        if(c&&c.image_url){imgEl.src=c.image_url;imgEl.style.display='block';document.getElementById('cal-cover-text').style.display='none';scale=(c.zoom||100);posX=c.pos_x||0;posY=c.pos_y||0;zoomEl.value=c.zoom||100;apply();}
-      };
-    })();
-
+    // Get day data: show ALL habits for every day, check done status from check_ins
     function getDayData(y,m,d){
       const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const myId=SB.myId, partnerId=SB.partnerProfile?.id;
@@ -120,11 +84,11 @@ import Layout from '../layouts/Layout.astro';
         if(h.type==='shared'){
           const myC=monthCheckIns.find(c=>c.habit_id===h.id&&c.user_id===myId&&c.date===dateStr);
           const bfC=monthCheckIns.find(c=>c.habit_id===h.id&&c.user_id===partnerId&&c.date===dateStr);
-          if(myC||bfC) results.push({name:h.name,myDone:!!myC?.done,bfDone:!!bfC?.done,isShared:true});
+          results.push({name:h.name,myDone:!!myC?.done,bfDone:!!bfC?.done,isShared:true});
         }else{
           const isMe=h.owner==='me';
           const ck=monthCheckIns.find(c=>c.habit_id===h.id&&c.date===dateStr);
-          if(ck) results.push({name:h.name,myDone:isMe?!!ck?.done:null,bfDone:!isMe?!!ck?.done:null,isShared:false,owner:h.owner});
+          results.push({name:h.name,myDone:isMe?!!ck?.done:null,bfDone:!isMe?!!ck?.done:null,isShared:false,owner:h.owner});
         }
       });
       return results;
@@ -135,7 +99,6 @@ import Layout from '../layouts/Layout.astro';
       if(!me?.couple_id){monthHabits=[];monthCheckIns=[];return;}
       const habits=await SB.loadHabits();
       monthHabits=habits||[];
-      // Need raw habit ids + couple_id for monthCheckIns - get from habits response
       const habitIds=monthHabits.map(h=>h.id);
       monthCheckIns=habitIds.length?await SB.loadMonthCheckIns(viewYear,viewMonth,monthHabits):[];
     }
@@ -147,7 +110,6 @@ import Layout from '../layouts/Layout.astro';
       const daysInMonth=new Date(viewYear,viewMonth+1,0).getDate();
       const today=now.getDate();
       const isCur=viewYear===now.getFullYear()&&viewMonth===now.getMonth();
-      const maxDay=daysInMonth;
 
       let myT=0,myD=0,bfT=0,bfD=0;
       for(let d=1;d<=daysInMonth;d++){
@@ -169,17 +131,18 @@ import Layout from '../layouts/Layout.astro';
         const isToday=isCur&&d===today;
         const isSelected=selectedDay===d;
         const data=getDayData(viewYear,viewMonth,d);
+        const sharedHabits=data.filter(h=>h.isShared);
         const anyMy=data.some(h=>h.myDone);
         const anyBf=data.some(h=>h.bfDone);
-        const allDone=data.length>0&&data.filter(h=>h.isShared).length>0&&data.filter(h=>h.isShared).every(h=>h.myDone&&h.bfDone);
+        // 🎉 = both people 100% on all shared habits for that day
+        const allDone=sharedHabits.length>0&&sharedHabits.every(h=>h.myDone&&h.bfDone);
         let bg='';
         if(isSelected)bg='background:var(--color-me);color:white;border:2px solid var(--color-me);';
         else if(isToday)bg='background:var(--color-me-light);border:2px solid var(--color-me);';
         else if(anyMy||anyBf)bg='background:var(--color-green-light);';
         html+=`<div class="text-center py-3 rounded-xl cursor-pointer text-sm" style="${bg}" onclick="showDay(${d})">
-
           <div class="font-semibold mb-1.5">${d}</div>
-          ${data.length?`<div class="flex items-center justify-center gap-1.5">
+          ${(anyMy||anyBf)?`<div class="flex items-center justify-center gap-1.5">
             ${anyMy?`<span style="width:7px;height:7px;border-radius:50%;background:var(--color-me);display:inline-block"></span>`:''}
             ${anyBf?`<span style="width:7px;height:7px;border-radius:50%;background:var(--color-bf);display:inline-block"></span>`:''}
           </div>${allDone?'<div class="text-xs mt-0.5">🎉</div>':''}`:''}
@@ -260,7 +223,7 @@ import Layout from '../layouts/Layout.astro';
       const ok=await SB.init();
       if(!ok||!SB.myProfile){window.location.href='/';return;}
       updateLabels();
-      await Promise.all([loadMonth(), window._loadCalCover?.()]);
+      await loadMonth();
       document.getElementById('auth-guard').style.display='none';
       renderCalendar();
     }
