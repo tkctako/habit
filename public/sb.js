@@ -52,7 +52,8 @@
     },
 
     async loadHabits(){
-      return api('habits',{action:'list'});
+      const date=new Date().toLocaleDateString('sv-SE');
+      return api('habits',{action:'list',date});
     },
 
     async toggleCheckIn(habitId,date){

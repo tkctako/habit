@@ -365,7 +365,8 @@ import Layout from '../layouts/Layout.astro';
     }
 
     window.todayToggle=async function(id){
-      await SB.toggleCheckIn(id);
+      const todayDate=new Date().toLocaleDateString('sv-SE');
+      await SB.toggleCheckIn(id,todayDate);
       await Promise.all([reloadHabits(), loadTodayData()]);
       render();
     };

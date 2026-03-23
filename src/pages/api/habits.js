@@ -8,7 +8,7 @@ export async function POST({ request }) {
 
   if (!action || action === 'list') {
     const { rows: habits } = await pool.query('SELECT * FROM habits WHERE couple_id=$1 ORDER BY created_at', [u.couple_id]);
-    const today = new Date().toISOString().split('T')[0];
+    const today = body.date || new Date().toISOString().split('T')[0];
     const { rows: cks } = await pool.query('SELECT * FROM check_ins WHERE date=$1 AND habit_id=ANY($2)', [today, habits.map(h => h.id)]);
     const { rows: users } = await pool.query('SELECT id,display_name,emoji FROM users WHERE couple_id=$1', [u.couple_id]);
     const me = users.find(x => x.id === u.id);
@@ -57,7 +57,7 @@ export async function POST({ request }) {
 
   if (action === 'toggleCheckIn') {
     const { habitId, date } = body;
-    const d = date || new Date().toISOString().split('T')[0];
+    const d = date || new Date().toLocaleDateString('sv-SE');
     const { rows } = await pool.query('SELECT * FROM check_ins WHERE habit_id=$1 AND user_id=$2 AND date=$3', [habitId, u.id, d]);
     if (rows.length) {
       await pool.query('UPDATE check_ins SET done=NOT done WHERE id=$1', [rows[0].id]);
