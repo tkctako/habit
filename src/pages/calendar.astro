@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 ---
 <Layout title="月曆">
   <div class="app-header flex items-center justify-between px-5 py-3.5 bg-card border-b border-gray-mid">
-    <h1 class="text-lg font-bold text-dark" style="font-family:'Cormorant Garamond','Noto Sans TC',serif;letter-spacing:0.02em">月曆</h1>
+    <h1 class="text-lg font-bold text-dark flex items-center gap-2" style="font-family:'Cormorant Garamond','Noto Sans TC',serif;letter-spacing:0.02em"><span id="title-calendar"></span> 月曆</h1>
     <div class="flex items-center gap-3">
       <span id="user-greeting" class="text-sm font-semibold text-dark"></span>
       <button onclick="openUserModal()" class="flex items-center justify-center" style="background:none;border:none;cursor:pointer;width:28px;height:28px;color:var(--color-accent)" id="user-icon-btn"></button>
@@ -163,6 +163,11 @@ import Layout from '../layouts/Layout.astro';
         :'<span style="font-size:12px;font-weight:600;padding:2px 10px;border-radius:99px;background:var(--color-gray-mid);color:var(--color-gray-text)">✕ 未完成</span>';
     }
 
+    function linkify(text){
+      if(!text)return'';
+      return text.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--color-me);text-decoration:underline;word-break:break-all">$1</a>');
+    }
+
     function getRecordSummary(h,content){
       if(!content)return'';
       if(h.category==='語言學習') return content.topic||'';
@@ -222,7 +227,7 @@ import Layout from '../layouts/Layout.astro';
           if(allDone)html+=`<div class="text-center py-2 rounded-xl text-sm mt-2" style="background:var(--color-me-light)">🎉 兩人都完成了！</div>`;
           recs.forEach(r=>{
             const s=habitObj?getRecordSummary(habitObj,r.content):'';
-            if(s)html+=`<div style="font-size:13px;color:var(--color-gray-text);margin-top:8px;padding:8px 12px;border-radius:10px;background:var(--color-gray-light)">${r.emoji||''} ${r.display_name||''}: ${s}</div>`;
+            if(s)html+=`<div style="font-size:13px;color:var(--color-gray-text);margin-top:8px;padding:8px 12px;border-radius:10px;background:var(--color-gray-light)">${r.emoji||''} ${r.display_name||''}: ${linkify(s)}</div>`;
           });
           html+='</div>';
         });
@@ -239,7 +244,7 @@ import Layout from '../layouts/Layout.astro';
           html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:10px;background:${h.owner==='me'?'var(--color-me-light)':'var(--color-gray-light)'}"><span style="font-size:14px">${emoji} ${name}</span>${statusTag(done)}</div>`;
           recs.forEach(r=>{
             const s=habitObj?getRecordSummary(habitObj,r.content):'';
-            if(s)html+=`<div style="font-size:13px;color:var(--color-gray-text);margin-top:8px;padding:8px 12px;border-radius:10px;background:var(--color-gray-light)">${s}</div>`;
+            if(s)html+=`<div style="font-size:13px;color:var(--color-gray-text);margin-top:8px;padding:8px 12px;border-radius:10px;background:var(--color-gray-light)">${linkify(s)}</div>`;
           });
           html+='</div>';
         });
@@ -251,6 +256,9 @@ import Layout from '../layouts/Layout.astro';
 
     document.getElementById('prev-month').addEventListener('click',async()=>{viewMonth--;if(viewMonth<0){viewMonth=11;viewYear--;}selectedDay=null;await loadMonth();renderCalendar();document.getElementById('day-detail').innerHTML='';});
     document.getElementById('next-month').addEventListener('click',async()=>{viewMonth++;if(viewMonth>11){viewMonth=0;viewYear++;}selectedDay=null;await loadMonth();renderCalendar();document.getElementById('day-detail').innerHTML='';});
+
+    // Inject title icon
+    if(ICONS){const tc=document.getElementById('title-calendar');if(tc)tc.innerHTML=ICONS.calendar;}
 
     function updateLabels(){
       document.getElementById('progress-me-label').textContent=myEmoji()+' '+displayName('我');

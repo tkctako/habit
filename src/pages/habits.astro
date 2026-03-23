@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 ---
 <Layout title="習慣追蹤">
   <div class="app-header flex items-center justify-between px-5 py-3.5 bg-card border-b border-gray-mid">
-    <h1 class="text-lg font-bold text-dark" style="font-family:'Cormorant Garamond','Noto Sans TC',serif;letter-spacing:0.02em">習慣追蹤</h1>
+    <h1 class="text-lg font-bold text-dark flex items-center gap-2" style="font-family:'Cormorant Garamond','Noto Sans TC',serif;letter-spacing:0.02em"><span id="title-habits"></span> 習慣追蹤</h1>
     <div class="flex items-center gap-3">
       <span id="user-greeting" class="text-sm font-semibold text-dark"></span>
       <button onclick="openUserModal()" class="flex items-center justify-center" style="background:none;border:none;cursor:pointer;width:28px;height:28px;color:var(--color-accent)" id="user-icon-btn"></button>
@@ -97,10 +97,11 @@ import Layout from '../layouts/Layout.astro';
     ];
 
     // ===== Auth + Init =====
-    // Inject tab icons
+    // Inject icons
     if(ICONS){
       const it=document.getElementById('icon-target');if(it)it.innerHTML=ICONS.target;
       const ih=document.getElementById('icon-heart');if(ih)ih.innerHTML=ICONS.heart;
+      const th=document.getElementById('title-habits');if(th)th.innerHTML=ICONS.habits;
     }
 
     async function appInit(){
@@ -265,7 +266,7 @@ import Layout from '../layouts/Layout.astro';
         <div class="bg-card rounded-2xl shadow-sm" style="border:1px solid var(--color-me-light);padding:16px;display:flex;align-items:center;gap:8px">
           <div style="flex:1">
             <p style="font-size:14px;margin-bottom:4px">${myEmoji()} ${displayName('我')}</p>
-            <p style="font-size:24px;font-weight:700;color:var(--color-me)">${myPct}%</p>
+            <p style="font-size:24px;font-weight:700;color:var(--color-me);font-family:'Noto Sans TC',sans-serif">${myPct}%</p>
             <p style="font-size:12px;color:var(--color-gray-text)">${myDone} / ${myTotal} 完成</p>
           </div>
           ${myFull?`<img src="/viking-100.png" style="width:100px;height:100px;object-fit:contain" />`:''}
@@ -273,7 +274,7 @@ import Layout from '../layouts/Layout.astro';
         <div class="rounded-2xl shadow-sm" style="background:var(--color-gray-light);border:1px solid var(--color-bf-light);padding:16px;display:flex;align-items:center;gap:8px">
           <div style="flex:1">
             <p style="font-size:14px;margin-bottom:4px">${bfEmoji()} ${displayName('男友')}</p>
-            <p style="font-size:24px;font-weight:700;color:var(--color-bf)">${bfPct}%</p>
+            <p style="font-size:24px;font-weight:700;color:var(--color-bf);font-family:'Noto Sans TC',sans-serif">${bfPct}%</p>
             <p style="font-size:12px;color:var(--color-gray-text)">${bfDone} / ${bfTotal} 完成</p>
           </div>
           ${bfFull?`<img src="/viking-100.png" style="width:100px;height:100px;object-fit:contain" />`:''}
@@ -316,6 +317,11 @@ import Layout from '../layouts/Layout.astro';
       c.innerHTML=html;
     }
 
+    function linkify(text){
+      if(!text)return'';
+      return text.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--color-me);text-decoration:underline;word-break:break-all">$1</a>');
+    }
+
     function todayCard(h,done,isMine,records){
       const checkStyle=done
         ?'width:28px;height:28px;border-radius:50%;background:var(--color-green);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;cursor:pointer;border:none;flex-shrink:0'
@@ -342,7 +348,7 @@ import Layout from '../layouts/Layout.astro';
             // 一般習慣、飲食 → 備註
             if(content.note)summary=content.note;
           }
-          if(summary)recordHtml+=`<div style="font-size:13px;color:var(--color-gray-text);margin-top:4px;margin-left:40px">${summary}</div>`;
+          if(summary)recordHtml+=`<div style="font-size:13px;color:var(--color-gray-text);margin-top:4px;margin-left:40px">${linkify(summary)}</div>`;
         });
       }
 

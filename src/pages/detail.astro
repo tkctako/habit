@@ -107,6 +107,11 @@ import Layout from '../layouts/Layout.astro';
       return checkInsCache.some(c=>c.habit_id===habitId&&c.user_id===userId&&c.date===date&&c.done);
     }
 
+    function linkify(text){
+      if(!text)return'';
+      return text.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--color-me);text-decoration:underline;word-break:break-all">$1</a>');
+    }
+
     function renderRecords(){
       const records=recordsCache,tpl=getTpl(habit.category);
       const c=document.getElementById('records-container');
@@ -121,21 +126,21 @@ import Layout from '../layouts/Layout.astro';
           const quotes=r.quotes||( r.quote?[r.quote]:[]);
           body=`${r.book?`<div class="flex items-center gap-2 mb-2"><span style="color:var(--color-me)">📖</span><span class="font-bold text-sm">${r.book}</span></div>`:''}
             ${quotes.length?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-me-light);border-left:3px solid var(--color-me)"><p class="text-xs font-semibold mb-1" style="color:var(--color-accent)">✨ 金句</p>${quotes.map((q,i)=>`<p class="text-sm mb-0.5"><span style="color:var(--color-me);font-weight:600">${i+1}.</span>&nbsp;&nbsp;"${q}"</p>`).join('')}</div>`:''}
-            ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-bf)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-bf)">💬 閱讀心得</p><p class="text-sm">${r.note}</p></div>`:''}`;
+            ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-bf)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-bf)">💬 閱讀心得</p><p class="text-sm">${linkify(r.note)}</p></div>`:''}`;
         }else if(tpl==='learning'){
           const srcHtml=r.source?(r.source.startsWith('http')?`<a href="${r.source}" target="_blank" style="color:var(--color-bf);text-decoration:underline;word-break:break-all">${r.source}</a>`:r.source):'';
           body=`${r.topic?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-me-light);border-left:3px solid var(--color-me)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-accent)">📚 學習主題</p><p class="text-sm font-bold">${r.topic}</p></div>`:''}
             ${srcHtml?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-warm-section);border-left:3px solid var(--color-bf)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-bf)">${ICONS.link} 資料來源</p><p class="text-sm">${srcHtml}</p></div>`:''}
             ${r.words?.length?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-green-light);border-left:3px solid var(--color-green)"><p class="text-xs font-semibold mb-1" style="color:var(--color-green)">習得例句或單字</p>${r.words.map((w,i)=>`<p class="text-sm mb-0.5"><span style="color:var(--color-me);font-weight:600">${i+1}.</span>&nbsp;&nbsp;${w}</p>`).join('')}</div>`:''}
-            ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-xs font-semibold mb-0.5">學習筆記</p><p class="text-sm">${r.note}</p></div>`:''}`;
+            ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-xs font-semibold mb-0.5">學習筆記</p><p class="text-sm">${linkify(r.note)}</p></div>`:''}`;
         }else if(tpl==='exercise'){
           body=`<div class="rounded-lg p-3 mb-2" style="background:#f0ebe4;border-left:3px solid var(--color-red)"><p class="text-sm"><b>類型：</b>${r.type||'-'}</p><p class="text-sm"><b>時長：</b>${r.duration||'-'}</p></div>
-            ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-sm">${r.note}</p></div>`:''}`;
+            ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-sm">${linkify(r.note)}</p></div>`:''}`;
         }else if(tpl==='gratitude'){
           body=`${r.items?.length?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-me-light);border-left:3px solid var(--color-me)"><p class="text-xs font-semibold mb-1" style="color:var(--color-accent)">🙏 感恩的事</p>${r.items.map((item,idx)=>`<p class="text-sm mb-0.5"><span style="color:var(--color-me);font-weight:600">${idx+1}.</span>&nbsp;&nbsp;${item}</p>`).join('')}</div>`:''}
-            ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-xs font-semibold mb-0.5">備註</p><p class="text-sm">${r.note}</p></div>`:''}`;
+            ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-xs font-semibold mb-0.5">備註</p><p class="text-sm">${linkify(r.note)}</p></div>`:''}`;
         }else{
-          body=r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-sm">${r.note}</p></div>`:'';
+          body=r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-sm">${linkify(r.note)}</p></div>`:'';
         }
         const userBadge=habit.type==='shared'?`<span style="font-size:13px;margin-left:8px">${r.userEmoji} ${r.userName}</span>`:'';
         const batchCb=batchMode&&r.isMe?`<input type="checkbox" id="batch-cb-${r.id}" ${batchSelected.has(r.id)?'checked':''} onclick="event.stopPropagation();toggleBatchItem(${r.id})" style="accent-color:var(--color-me);width:18px;height:18px;cursor:pointer;flex-shrink:0" />`:'';
