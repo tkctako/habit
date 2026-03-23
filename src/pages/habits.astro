@@ -266,23 +266,18 @@ import Layout from '../layouts/Layout.astro';
           const content=typeof r.content==='string'?JSON.parse(r.content):r.content;
           if(!content)return;
           let summary='';
-          // Smart display per category
           if(h.category==='學習'){
-            if(content.topic)summary=`📚 ${content.topic}`;
-            else if(content.words?.length)summary=`${content.words.slice(0,3).join('、')}`;
-            if(content.source){
-              const src=content.source.startsWith('http')?`<a href="${content.source}" target="_blank" style="color:var(--color-bf);text-decoration:underline">${new URL(content.source).hostname}</a>`:content.source;
-              summary+=summary?` · ${src}`:src;
-            }
+            if(content.topic)summary=content.topic;
           }else if(h.category==='感恩紀錄'){
-            if(content.items?.length)summary=`🙏 ${content.items.slice(0,2).join('、')}${content.items.length>2?' ...':''}`;
-          }else{
+            summary='感恩的事';
+          }else if(h.category==='運動'){
             const parts=[];
-            Object.entries(content).forEach(([k,v])=>{
-              if(v&&k!=='note'&&!Array.isArray(v))parts.push(`${v}`);
-            });
-            if(content?.note)parts.push(content.note);
-            summary=parts.join(' · ');
+            if(content.type)parts.push(content.type);
+            if(content.duration)parts.push(content.duration);
+            summary=parts.join(' / ');
+          }else{
+            // 一般習慣、飲食 → 備註
+            if(content.note)summary=content.note;
           }
           if(summary)recordHtml+=`<div style="font-size:13px;color:var(--color-gray-text);margin-top:4px;margin-left:40px">${summary}</div>`;
         });

@@ -80,7 +80,7 @@ import Layout from '../layouts/Layout.astro';
       return n;
     }
 
-    // Get day data: show ALL habits for every day, check done status from check_ins
+    // Get day data: only show habits that have check-in records on that date
     function getDayData(y,m,d){
       const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const myId=SB.myId, partnerId=SB.partnerProfile?.id;
@@ -89,11 +89,11 @@ import Layout from '../layouts/Layout.astro';
         if(h.type==='shared'){
           const myC=monthCheckIns.find(c=>c.habit_id===h.id&&c.user_id===myId&&c.date===dateStr);
           const bfC=monthCheckIns.find(c=>c.habit_id===h.id&&c.user_id===partnerId&&c.date===dateStr);
-          results.push({name:h.name,myDone:!!myC?.done,bfDone:!!bfC?.done,isShared:true});
+          if(myC||bfC) results.push({name:h.name,myDone:!!myC?.done,bfDone:!!bfC?.done,isShared:true});
         }else{
           const isMe=h.owner==='me';
           const ck=monthCheckIns.find(c=>c.habit_id===h.id&&c.date===dateStr);
-          results.push({name:h.name,myDone:isMe?!!ck?.done:null,bfDone:!isMe?!!ck?.done:null,isShared:false,owner:h.owner});
+          if(ck) results.push({name:h.name,myDone:isMe?!!ck?.done:null,bfDone:!isMe?!!ck?.done:null,isShared:false,owner:h.owner});
         }
       });
       return results;
