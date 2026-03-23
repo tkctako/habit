@@ -136,11 +136,12 @@ import Layout from '../layouts/Layout.astro';
         const isToday=isCur&&d===today;
         const isSelected=selectedDay===d;
         const data=getDayData(viewYear,viewMonth,d);
-        const sharedHabits=data.filter(h=>h.isShared);
         const anyMy=data.some(h=>h.myDone);
         const anyBf=data.some(h=>h.bfDone);
-        // 🎉 = both people 100% on all shared habits for that day
-        const allDone=sharedHabits.length>0&&sharedHabits.every(h=>h.myDone&&h.bfDone);
+        // 🎉 = both users 100% completion on ALL their habits for that day
+        const myHabits=data.filter(h=>h.myDone!==null);
+        const bfHabits=data.filter(h=>h.bfDone!==null);
+        const allDone=myHabits.length>0&&bfHabits.length>0&&myHabits.every(h=>h.myDone)&&bfHabits.every(h=>h.bfDone);
         let bg='';
         if(isSelected)bg='background:var(--color-me);color:white;border:2px solid var(--color-me);';
         else if(isToday)bg='background:var(--color-me-light);border:2px solid var(--color-me);';

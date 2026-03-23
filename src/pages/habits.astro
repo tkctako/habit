@@ -228,10 +228,16 @@ import Layout from '../layouts/Layout.astro';
           <h3 style="font-size:16px;font-weight:700">${displayName('我')}的今日目標</h3>
         </div>`;
 
+      // Only show habits that have check-ins or records for today
+      const todayCheckIns=td?.checkIns||[];
+      const todayRecordIds=new Set((td?.records||[]).map(r=>r.habit_id));
+      const todayCheckInIds=new Set(todayCheckIns.map(c=>c.habit_id));
+      const hasDataToday=(hId)=>todayRecordIds.has(hId)||todayCheckInIds.has(hId);
+
       habits.forEach(h=>{
         if(h.type==='personal'&&h.owner!=='me')return;
+        if(!hasDataToday(h.id))return;
         const done=h.type==='shared'?h.users?.find(u=>u.name==='我')?.done:h.done;
-        // For shared habits, show all records (both users); for personal, only mine
         const recs=(td?.records||[]).filter(r=>r.habit_id===h.id&&(h.type==='shared'||r.user_id===myId));
         html+=todayCard(h,done,true,recs);
       });
@@ -246,6 +252,7 @@ import Layout from '../layouts/Layout.astro';
 
       habits.forEach(h=>{
         if(h.type==='personal'&&h.owner!=='bf')return;
+        if(!hasDataToday(h.id))return;
         const done=h.type==='shared'?h.users?.find(u=>u.name==='男友')?.done:h.done;
         const recs=(td?.records||[]).filter(r=>r.habit_id===h.id&&(h.type==='shared'||r.user_id===partnerId));
         html+=todayCard(h,done,false,recs);
