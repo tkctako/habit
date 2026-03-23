@@ -156,18 +156,38 @@ import Layout from '../layouts/Layout.astro';
       const COVER_ID='habits-banner';
       const imgEl=document.getElementById('banner-img'),zoomEl=document.getElementById('banner-zoom');
       let scale=1,posX=0,posY=0,dragging=false,startX=0,startY=0,lx=0,ly=0;
+      let coverSrc='';
       let saveTimer=null;
       function apply(){imgEl.style.transform='scale('+scale+') translate('+posX+'px,'+posY+'px)';}
       function debounceSave(){
         clearTimeout(saveTimer);
         saveTimer=setTimeout(()=>{
-          // Only save URL covers, not base64 (too large)
-          const src=imgEl.src;
-          if(src&&!src.startsWith('data:')){
-            SB.saveCover(COVER_ID,src,Math.round(scale*100),Math.round(posX),Math.round(posY));
-          }
+          if(coverSrc)SB.saveCover(COVER_ID,coverSrc,Math.round(scale*100),Math.round(posX),Math.round(posY));
         },800);
       }
+
+      // Compress image to max 800px, JPEG 0.7 quality → small base64
+      function compressImage(file,cb){
+        const img=new Image();
+        img.onload=function(){
+          const MAX=800;
+          let w=img.width,h=img.height;
+          if(w>MAX){h=Math.round(h*(MAX/w));w=MAX;}
+          if(h>MAX){w=Math.round(w*(MAX/h));h=MAX;}
+          const canvas=document.createElement('canvas');
+          canvas.width=w;canvas.height=h;
+          canvas.getContext('2d').drawImage(img,0,0,w,h);
+          cb(canvas.toDataURL('image/jpeg',0.7));
+        };
+        img.src=URL.createObjectURL(file);
+      }
+
+      function setCover(src){
+        coverSrc=src;
+        imgEl.src=src;scale=1;posX=0;posY=0;zoomEl.value=100;apply();
+        SB.saveCover(COVER_ID,src,100,0,0);
+      }
+
       zoomEl.addEventListener('input',function(e){e.stopPropagation();scale=parseInt(this.value)/100;apply();debounceSave();});
       imgEl.addEventListener('mousedown',function(e){e.preventDefault();e.stopPropagation();dragging=true;startX=e.clientX;startY=e.clientY;lx=posX;ly=posY;});
       document.addEventListener('mousemove',function(e){if(!dragging)return;posX=lx+(e.clientX-startX)/scale;posY=ly+(e.clientY-startY)/scale;apply();});
@@ -175,18 +195,15 @@ import Layout from '../layouts/Layout.astro';
       imgEl.addEventListener('touchstart',function(e){dragging=true;startX=e.touches[0].clientX;startY=e.touches[0].clientY;lx=posX;ly=posY;},{passive:true});
       document.addEventListener('touchmove',function(e){if(!dragging)return;posX=lx+(e.touches[0].clientX-startX)/scale;posY=ly+(e.touches[0].clientY-startY)/scale;apply();},{passive:true});
       document.addEventListener('touchend',function(){if(dragging){dragging=false;debounceSave();}});
-      function setCover(src){
-        imgEl.src=src;scale=1;posX=0;posY=0;zoomEl.value=100;apply();
-        // Only save URL covers to DB
-        if(!src.startsWith('data:')){
-          SB.saveCover(COVER_ID,src,100,0,0);
-        }
-      }
-      document.getElementById('banner-file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setCover(ev.target.result);r.readAsDataURL(f);});
+
+      document.getElementById('banner-file').addEventListener('change',e=>{
+        const f=e.target.files[0];if(!f)return;
+        compressImage(f,src=>setCover(src));
+      });
       document.getElementById('banner-url-btn').addEventListener('click',()=>{const url=prompt('輸入圖片網址：');if(url)setCover(url);});
       window._loadBannerCover=async function(){
         const c=await SB.loadCover(COVER_ID);
-        if(c&&c.image_url){imgEl.src=c.image_url;scale=(c.zoom||100)/100;posX=c.pos_x||0;posY=c.pos_y||0;zoomEl.value=c.zoom||100;apply();}
+        if(c&&c.image_url){coverSrc=c.image_url;imgEl.src=c.image_url;scale=(c.zoom||100)/100;posX=c.pos_x||0;posY=c.pos_y||0;zoomEl.value=c.zoom||100;apply();}
       };
     })();
 
