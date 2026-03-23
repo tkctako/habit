@@ -63,13 +63,10 @@ import Layout from '../layouts/Layout.astro';
         </div>
       </form>
       <hr style="border:none;border-top:1px solid var(--color-gray-mid);margin:20px 0 16px" />
-      <div class="space-y-3 mb-4">
-        <h3 class="text-base font-bold">激勵語錄</h3>
-        <div id="quotes-list" class="space-y-2"></div>
-        <button type="button" onclick="addQuoteRow()" class="text-sm font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增激勵語</button>
-        <button type="button" onclick="saveQuotes()" class="btn-gradient w-full" style="padding:10px 16px;font-size:13px">儲存激勵語</button>
-        <div id="quotes-ok" class="text-sm text-center" style="color:var(--color-green);display:none">已儲存 ✓</div>
-      </div>
+      <button type="button" onclick="document.getElementById('user-modal').style.display='none';window.location.href='/quotes'" class="w-full flex items-center justify-between py-3 px-1 bg-transparent border-none cursor-pointer" style="font-family:'Noto Sans TC',sans-serif">
+        <span class="text-base font-bold text-dark">激勵語錄</span>
+        <span style="color:var(--color-gray-text);font-size:18px">›</span>
+      </button>
       <hr style="border:none;border-top:1px solid var(--color-gray-mid);margin:20px 0 16px" />
       <form id="pw-form" class="space-y-4">
         <h3 class="text-base font-bold">變更密碼</h3>
@@ -177,39 +174,12 @@ import Layout from '../layouts/Layout.astro';
       }catch(e){}
     }
 
-    function renderQuoteRows(){
-      const list=document.getElementById('quotes-list');
-      const items=customQuotes.length?customQuotes:[''];
-      list.innerHTML=items.map((q,i)=>`<div class="flex items-center gap-2"><input type="text" data-quote-input value="${q.replace(/"/g,'&quot;')}" class="form-input flex-1" style="padding:8px 12px;font-size:13px" placeholder="輸入激勵語..." /><button type="button" onclick="removeQuoteRow(${i})" style="background:none;border:none;cursor:pointer;padding:4px">${ICONS.trash}</button></div>`).join('');
-    }
-    window.addQuoteRow=function(){
-      customQuotes.push('');renderQuoteRows();
-      const inputs=document.querySelectorAll('[data-quote-input]');
-      inputs[inputs.length-1].focus();
-    };
-    window.removeQuoteRow=function(i){
-      syncQuoteInputs();customQuotes.splice(i,1);renderQuoteRows();
-    };
-    function syncQuoteInputs(){
-      customQuotes=[];
-      document.querySelectorAll('[data-quote-input]').forEach(el=>{const v=el.value.trim();if(v)customQuotes.push(v);});
-    }
-    window.saveQuotes=async function(){
-      syncQuoteInputs();
-      await SB.saveQuotes(customQuotes);
-      document.getElementById('quotes-ok').style.display='';
-      setTimeout(()=>document.getElementById('quotes-ok').style.display='none',2000);
-    };
-
-    window.openUserModal=async function(){
+    window.openUserModal=function(){
       document.getElementById('uf-name').value=SB.myProfile?.display_name||'';
       document.getElementById('pw-new').value='';
       document.getElementById('pw-confirm').value='';
       document.getElementById('pw-error').style.display='none';
       document.getElementById('pw-success').style.display='none';
-      document.getElementById('quotes-ok').style.display='none';
-      await loadQuotes();
-      renderQuoteRows();
       document.getElementById('user-modal').style.display='flex';
     };
     document.getElementById('user-form').addEventListener('submit',async function(e){

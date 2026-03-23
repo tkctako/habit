@@ -1,0 +1,118 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="激勵語錄">
+  <div class="flex items-center gap-3 px-5 py-3.5 bg-card border-b border-gray-mid">
+    <a href="/habits" onclick="event.preventDefault();history.back()" class="flex items-center justify-center" style="text-decoration:none;color:var(--color-dark);font-size:22px;line-height:1">‹</a>
+    <h1 class="text-lg font-bold text-dark" style="font-family:'Cormorant Garamond','Noto Sans TC',serif;letter-spacing:0.02em;flex:1">激勵語錄</h1>
+  </div>
+
+  <div class="px-4 pt-5 pb-32">
+    <p class="text-sm mb-5" style="color:var(--color-gray-text)">自訂你們的激勵語，會顯示在今日目標頂部 ✨</p>
+
+    <div id="quotes-container" class="space-y-3"></div>
+
+    <button type="button" id="add-quote-btn" class="add-habit-btn mt-4">＋ 新增激勵語</button>
+
+    <div class="mt-5">
+      <button type="button" id="save-btn" class="btn-gradient w-full">儲存</button>
+      <div id="save-ok" class="text-sm text-center mt-2" style="color:var(--color-green);display:none">已儲存 ✓</div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--color-gray-mid);margin:28px 0 16px" />
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-bold" style="color:var(--color-gray-text)">預設語錄（無自訂時使用）</h3>
+      </div>
+      <div id="default-quotes" class="space-y-2"></div>
+    </div>
+  </div>
+
+  <script is:inline>
+    const DEFAULT_QUOTES=[
+      '「每一個小習慣，都是通往更好自己的一步」💪',
+      '「一起努力的日子，都是最珍貴的」💕',
+      '「堅持不是因為容易，而是因為值得」✨',
+      '「今天的你，比昨天更強大」🌟',
+      '「兩個人一起堅持，力量加倍」♡',
+      '「不必完美，但求進步」🌱',
+      '「每天進步 1%，一年後你會驚艷自己」📈',
+      '「好習慣是送給未來自己最好的禮物」🎁',
+      '「一起變好，是最浪漫的事」🌹',
+      '「你的堅持，我都看得見」👀💛',
+    ];
+
+    let quotes=[];
+
+    function render(){
+      const c=document.getElementById('quotes-container');
+      if(!quotes.length){
+        c.innerHTML='<p class="text-center text-gray-text py-4" style="font-size:13px">還沒有自訂激勵語</p>';
+      }else{
+        c.innerHTML=quotes.map((q,i)=>`
+          <div class="habit-card" style="padding:12px 14px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="color:var(--color-accent);font-weight:700;font-size:14px;min-width:24px">${i+1}.</span>
+              <input type="text" data-qi="${i}" value="${q.replace(/"/g,'&quot;')}" class="form-input flex-1" style="padding:8px 12px;font-size:14px;border:none;background:transparent" placeholder="輸入激勵語..." onfocus="this.style.background='var(--color-gray-light)'" onblur="this.style.background='transparent'" />
+              <button onclick="removeQuote(${i})" style="background:none;border:none;cursor:pointer;padding:4px;flex-shrink:0">${ICONS.trash}</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Default quotes display
+      document.getElementById('default-quotes').innerHTML=DEFAULT_QUOTES.map(q=>
+        `<div style="padding:8px 12px;border-radius:12px;background:var(--color-gray-light);font-size:13px;color:var(--color-gray-text);font-style:italic">${q}</div>`
+      ).join('');
+    }
+
+    window.removeQuote=function(i){
+      syncInputs();
+      quotes.splice(i,1);
+      render();
+    };
+
+    function syncInputs(){
+      const newQ=[];
+      document.querySelectorAll('[data-qi]').forEach(el=>{
+        newQ[parseInt(el.dataset.qi)]=el.value.trim();
+      });
+      quotes=newQ.filter(q=>q!==undefined);
+    }
+
+    document.getElementById('add-quote-btn').addEventListener('click',()=>{
+      syncInputs();
+      quotes.push('');
+      render();
+      // Focus the new input
+      setTimeout(()=>{
+        const inputs=document.querySelectorAll('[data-qi]');
+        if(inputs.length)inputs[inputs.length-1].focus();
+      },50);
+    });
+
+    document.getElementById('save-btn').addEventListener('click',async()=>{
+      syncInputs();
+      quotes=quotes.filter(q=>q); // remove empty
+      await SB.saveQuotes(quotes);
+      render();
+      const ok=document.getElementById('save-ok');
+      ok.style.display='';
+      setTimeout(()=>ok.style.display='none',2000);
+    });
+
+    async function appInit(){
+      if(SB.initFromCache())document.getElementById('auth-guard')?.style&&(document.getElementById('auth-guard').style.display='none');
+      const ok=await SB.init();
+      if(!ok||!SB.myProfile){window.location.href='/';return;}
+      // Load existing quotes
+      try{
+        const r=await SB.loadQuotes();
+        if(r&&r.image_url){quotes=JSON.parse(r.image_url)||[];}
+      }catch(e){}
+      const ag=document.getElementById('auth-guard');if(ag)ag.style.display='none';
+      render();
+    }
+    appInit();
+  </script>
+</Layout>
