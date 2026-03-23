@@ -165,7 +165,8 @@ import Layout from '../layouts/Layout.astro';
 
     function getRecordSummary(h,content){
       if(!content)return'';
-      if(h.category==='學習') return content.topic||'';
+      if(h.category==='語言學習') return content.topic||'';
+      if(h.category==='閱讀') return content.book||'';
       if(h.category==='感恩紀錄') return '感恩的事';
       if(h.category==='運動'){
         const p=[];if(content.type)p.push(content.type);if(content.duration)p.push(content.duration);

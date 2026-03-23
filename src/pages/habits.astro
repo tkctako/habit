@@ -60,7 +60,7 @@ import Layout from '../layouts/Layout.astro';
       <form id="habit-form" class="space-y-5">
         <div><label class="block text-sm font-semibold mb-1.5">習慣名稱</label><input type="text" id="hf-name" placeholder="例如：早起運動" class="form-input" required /></div>
         <div><label class="block text-sm font-semibold mb-1.5">類型</label><select id="hf-type" class="form-select"><option value="shared">共同習慣</option><option value="personal">個人習慣</option></select></div>
-        <div><label class="block text-sm font-semibold mb-1.5">分類</label><select id="hf-cat" class="form-select"><option value="一般習慣">一般習慣</option><option value="感恩紀錄">感恩紀錄</option><option value="學習">學習</option><option value="運動">運動</option><option value="飲食">飲食</option></select></div>
+        <div><label class="block text-sm font-semibold mb-1.5">分類</label><select id="hf-cat" class="form-select"><option value="一般習慣">一般習慣</option><option value="閱讀">閱讀</option><option value="感恩紀錄">感恩紀錄</option><option value="語言學習">語言學習</option><option value="運動">運動</option><option value="飲食">飲食</option></select></div>
         <div class="flex gap-3 pt-2">
           <button type="button" id="modal-cancel" class="btn-outline flex-1">取消</button>
           <button type="submit" id="modal-submit" class="btn-gradient flex-1">新增</button>
@@ -291,8 +291,10 @@ import Layout from '../layouts/Layout.astro';
           const content=typeof r.content==='string'?JSON.parse(r.content):r.content;
           if(!content)return;
           let summary='';
-          if(h.category==='學習'){
+          if(h.category==='語言學習'){
             if(content.topic)summary=content.topic;
+          }else if(h.category==='閱讀'){
+            if(content.book)summary=content.book;
           }else if(h.category==='感恩紀錄'){
             summary='感恩的事';
           }else if(h.category==='運動'){

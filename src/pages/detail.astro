@@ -56,7 +56,7 @@ import Layout from '../layouts/Layout.astro';
       if(!habit){document.getElementById('habit-title').textContent='找不到';return;}
       document.getElementById('habit-title').textContent=habit.name;
       const tpl=getTpl(habit.category);
-      const labels={reading:['新增閱讀記錄','閱讀記錄'],learning:['新增學習記錄','學習記錄'],exercise:['新增運動記錄','運動記錄'],gratitude:['新增感恩紀錄','感恩紀錄'],general:['新增記錄','記錄']};
+      const labels={reading:['新增閱讀記錄','閱讀記錄'],learning:['新增語言學習記錄','語言學習記錄'],exercise:['新增運動記錄','運動記錄'],gratitude:['新增感恩紀錄','感恩紀錄'],general:['新增記錄','記錄']};
       document.getElementById('add-record-text').textContent=labels[tpl][0];
       document.getElementById('records-title').textContent=labels[tpl][1];
       await reloadRecords();
@@ -74,7 +74,8 @@ import Layout from '../layouts/Layout.astro';
     }
 
     function getTpl(cat){
-      if(cat==='學習')return'learning';
+      if(cat==='語言學習')return'learning';
+      if(cat==='閱讀')return'reading';
       if(cat==='運動')return'exercise';
       if(cat==='感恩紀錄')return'gratitude';
       if(cat==='飲食')return'general';
@@ -153,7 +154,7 @@ import Layout from '../layouts/Layout.astro';
         <div><label class="block text-sm font-semibold mb-1">習得例句或單字</label><div id="word-list" class="rounded-xl border p-3 max-h-[250px] overflow-y-auto" style="border-color:var(--color-me)">${lines}</div><div class="flex items-center justify-between mt-1"><p id="word-count" class="text-xs" style="color:var(--color-green)">已輸入 ${words.filter(x=>x).length} 個</p><button type="button" onclick="addWordRow()" class="text-xs font-semibold bg-transparent border-none cursor-pointer" style="color:var(--color-me)">+ 新增一行</button></div></div>
         <div><label class="block text-sm font-semibold mb-1">學習筆記</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
       }
-      if(tpl==='reading')return`<div><label class="block text-sm font-semibold mb-1">書名</label><input id="rf-book" value="${r.book||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">金句</label><input id="rf-quote" value="${r.quote||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">閱讀心得</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
+      if(tpl==='reading')return`<div><label class="block text-sm font-semibold mb-1">書名 *</label><input id="rf-book" value="${r.book||''}" class="form-input" placeholder="輸入書名..." required /></div><div><label class="block text-sm font-semibold mb-1">金句</label><textarea id="rf-quote" rows="3" class="form-input" style="resize:vertical" placeholder="摘錄書中令你印象深刻的句子...">${r.quote||''}</textarea></div><div><label class="block text-sm font-semibold mb-1">閱讀心得</label><textarea id="rf-note" rows="4" class="form-input" style="resize:vertical" placeholder="寫下你的閱讀心得與感想...">${r.note||''}</textarea></div>`;
       if(tpl==='exercise')return`<div><label class="block text-sm font-semibold mb-1">運動類型</label><input id="rf-type" value="${r.type||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">時長</label><input id="rf-duration" value="${r.duration||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">備註</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
       return`<div><label class="block text-sm font-semibold mb-1">備註</label><textarea id="rf-note" rows="3" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
     }
