@@ -13,6 +13,22 @@ import Layout from '../layouts/Layout.astro';
       <h2 id="habit-title" class="text-xl font-bold text-dark"></h2>
     </div>
 
+    <!-- Goal section -->
+    <div id="goal-section" class="habit-card mb-4" style="padding:14px 16px">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm font-bold" style="color:var(--color-accent);display:flex;align-items:center;gap:4px"><span id="goal-icon"></span> 習慣目標</span>
+        <button id="goal-edit-btn" onclick="toggleGoalEdit()" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-mid bg-transparent cursor-pointer" style="color:var(--color-gray-text);font-family:'Noto Sans TC',sans-serif">編輯</button>
+      </div>
+      <div id="goal-display" style="font-size:14px;color:var(--color-dark);white-space:pre-line;line-height:1.6"></div>
+      <div id="goal-edit" style="display:none">
+        <textarea id="goal-input" class="form-input" rows="3" style="resize:vertical;font-size:14px" placeholder="寫下這個習慣的目標..."></textarea>
+        <div class="flex gap-2 mt-2">
+          <button onclick="cancelGoalEdit()" class="btn-outline flex-1 text-sm py-2">取消</button>
+          <button onclick="saveGoal()" class="btn-gradient flex-1 text-sm py-2">儲存</button>
+        </div>
+      </div>
+    </div>
+
     <button id="add-record-btn" class="btn-gradient mb-4 flex items-center justify-center gap-2">+ <span id="add-record-text">新增記錄</span></button>
     <div class="flex items-center justify-between mb-3">
       <h3 id="records-title" class="text-sm font-bold text-dark" style="font-family:'Noto Sans TC',sans-serif"></h3>
@@ -69,10 +85,46 @@ import Layout from '../layouts/Layout.astro';
       const labels={reading:['新增閱讀記錄','閱讀記錄'],learning:['新增語言學習記錄','語言學習記錄'],exercise:['新增運動記錄','運動記錄'],gratitude:['新增感恩紀錄','感恩紀錄'],general:['新增記錄','記錄']};
       document.getElementById('add-record-text').textContent=labels[tpl][0];
       document.getElementById('records-title').textContent=labels[tpl][1];
+      // Goal
+      renderGoal();
       await reloadRecords();
       document.getElementById('auth-guard').style.display='none';
       renderRecords();
     }
+
+    // Inject goal icon
+    if(ICONS){const gi=document.getElementById('goal-icon');if(gi)gi.innerHTML=ICONS.target;}
+
+    // Goal functions
+    function renderGoal(){
+      const g=habit?.goal||'';
+      const display=document.getElementById('goal-display');
+      const edit=document.getElementById('goal-edit');
+      display.textContent=g||'尚未設定目標';
+      if(!g)display.style.color='var(--color-gray-text)';
+      else display.style.color='var(--color-dark)';
+      display.style.display='';
+      edit.style.display='none';
+      document.getElementById('goal-edit-btn').textContent='編輯';
+    }
+    window.toggleGoalEdit=function(){
+      const display=document.getElementById('goal-display');
+      const edit=document.getElementById('goal-edit');
+      if(edit.style.display==='none'){
+        document.getElementById('goal-input').value=habit?.goal||'';
+        display.style.display='none';
+        edit.style.display='';
+        document.getElementById('goal-edit-btn').style.display='none';
+      }else{renderGoal();}
+    };
+    window.cancelGoalEdit=function(){renderGoal();document.getElementById('goal-edit-btn').style.display='';};
+    window.saveGoal=async function(){
+      const goal=document.getElementById('goal-input').value.trim();
+      await SB.updateGoal(habit.id,goal);
+      habit.goal=goal;
+      renderGoal();
+      document.getElementById('goal-edit-btn').style.display='';
+    };
 
     function myEmoji(){return SB.myProfile?.emoji||'👩';}
     function bfEmoji(){return SB.partnerProfile?.emoji||'👦';}

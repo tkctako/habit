@@ -67,6 +67,10 @@
       return api('habits',{action:'update',id,name,type,category});
     },
 
+    async updateGoal(id,goal){
+      return api('habits',{action:'updateGoal',id,goal});
+    },
+
     async deleteHabit(id){
       return api('habits',{action:'delete',id});
     },

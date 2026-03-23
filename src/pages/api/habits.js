@@ -17,7 +17,7 @@ export async function POST({ request }) {
       if (h.type === 'shared') {
         const myC = cks.find(c => c.habit_id === h.id && c.user_id === u.id);
         const bfC = cks.find(c => c.habit_id === h.id && c.user_id === partner?.id);
-        return { id: h.id, name: h.name, type: 'shared', category: h.category,
+        return { id: h.id, name: h.name, type: 'shared', category: h.category, goal: h.goal||'',
           users: [
             { name: '我', emoji: me?.emoji || '👩', streak: 0, done: !!myC?.done },
             { name: '男友', emoji: partner?.emoji || '👦', streak: 0, done: !!bfC?.done }
@@ -25,7 +25,7 @@ export async function POST({ request }) {
       } else {
         const isMe = h.created_by === u.id;
         const ck = cks.find(c => c.habit_id === h.id && c.user_id === h.created_by);
-        return { id: h.id, name: h.name, type: 'personal', owner: isMe ? 'me' : 'bf', category: h.category, streak: 0, done: !!ck?.done };
+        return { id: h.id, name: h.name, type: 'personal', owner: isMe ? 'me' : 'bf', category: h.category, goal: h.goal||'', streak: 0, done: !!ck?.done };
       }
     });
     return json(result);
@@ -40,6 +40,12 @@ export async function POST({ request }) {
   if (action === 'update') {
     const { id, name, type, category } = body;
     await pool.query('UPDATE habits SET name=$1,type=$2,category=$3 WHERE id=$4 AND couple_id=$5', [name, type, category, id, u.couple_id]);
+    return json({ ok: true });
+  }
+
+  if (action === 'updateGoal') {
+    const { id, goal } = body;
+    await pool.query('UPDATE habits SET goal=$1 WHERE id=$2 AND couple_id=$3', [goal||'', id, u.couple_id]);
     return json({ ok: true });
   }
 
