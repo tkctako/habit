@@ -98,7 +98,7 @@ h1, h2, h3, h4, .serif {
   flex-shrink: 0; transition: all 0.2s ease;
 }
 .check-done { background: var(--color-green); color: white; }
-.check-none { background: var(--color-gray-mid); color: var(--color-gray-text); }
+.check-none { background: transparent; border: 2px solid var(--color-gray-mid) !important; color: var(--color-gray-text); }
 
 /* Modal */
 .modal-backdrop {

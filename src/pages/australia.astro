@@ -141,9 +141,9 @@ import Layout from '../layouts/Layout.astro';
               <button onclick="openAuDelete(${item.id})" style="background:none;border:none;cursor:pointer;padding:4px">${DEL_SVG}</button>
             </div>
           </div>
-          ${item.description?`<div style="margin:10px 0 0 40px;padding:10px 14px;border-radius:12px;background:var(--color-gray-light);font-size:13px;color:var(--color-dark);line-height:1.6">${item.description}</div>`:''}
+          ${item.description?`<div style="margin:10px 0 0 40px;padding:10px 14px;border-radius:12px;background:var(--color-gray-light);font-size:13px;color:var(--color-dark);line-height:1.6;white-space:pre-line">${item.description}</div>`:''}
           ${item.reference?`<div style="margin:8px 0 0 40px;padding:10px 14px;border-radius:12px;background:var(--color-me-light);font-size:13px"><span style="font-weight:600;color:var(--color-accent);display:inline-flex;align-items:center;gap:4px">${ICONS.link} 參考</span><br/><span style="color:var(--color-bf);word-break:break-all">${item.reference.startsWith('http')?`<a href="${item.reference}" target="_blank" style="color:var(--color-bf);text-decoration:underline">${item.reference}</a>`:item.reference}</span></div>`:''}
-          ${item.notes?`<div style="margin:8px 0 0 40px;padding:10px 14px;border-radius:12px;background:var(--color-warm-section);font-size:13px"><span style="font-weight:600;color:var(--color-bf);display:inline-flex;align-items:center;gap:4px">${ICONS.lightbulb} 備註</span><br/><span style="color:var(--color-dark)">${item.notes}</span></div>`:''}
+          ${item.notes?`<div style="margin:8px 0 0 40px;padding:10px 14px;border-radius:12px;background:var(--color-warm-section);font-size:13px"><span style="font-weight:600;color:var(--color-bf);display:inline-flex;align-items:center;gap:4px">${ICONS.lightbulb} 備註</span><br/><span style="color:var(--color-dark);white-space:pre-line">${item.notes}</span></div>`:''}
         </div>`;
       }).join('')||'<p class="text-center text-gray-text py-8">還沒有準備事項</p>';
 

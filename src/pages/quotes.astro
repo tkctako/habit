@@ -53,7 +53,7 @@ import Layout from '../layouts/Layout.astro';
           <div class="habit-card" style="padding:12px 14px">
             <div style="display:flex;align-items:center;gap:10px">
               <span style="color:var(--color-accent);font-weight:700;font-size:14px;min-width:24px">${i+1}.</span>
-              <input type="text" data-qi="${i}" value="${q.replace(/"/g,'&quot;')}" class="form-input flex-1" style="padding:8px 12px;font-size:14px;border:none;background:transparent" placeholder="輸入激勵語..." onfocus="this.style.background='var(--color-gray-light)'" onblur="this.style.background='transparent'" />
+              <textarea data-qi="${i}" class="form-input flex-1" style="padding:8px 12px;font-size:14px;border:none;background:transparent;resize:vertical;min-height:40px" rows="2" placeholder="輸入激勵語..." onfocus="this.style.background='var(--color-gray-light)'" onblur="this.style.background='transparent'">${q}</textarea>
               <button onclick="removeQuote(${i})" style="background:none;border:none;cursor:pointer;padding:4px;flex-shrink:0">${ICONS.trash}</button>
             </div>
           </div>
@@ -62,7 +62,7 @@ import Layout from '../layouts/Layout.astro';
 
       // Default quotes display
       document.getElementById('default-quotes').innerHTML=DEFAULT_QUOTES.map(q=>
-        `<div style="padding:8px 12px;border-radius:12px;background:var(--color-gray-light);font-size:13px;color:var(--color-gray-text);font-style:italic">${q}</div>`
+        `<div style="padding:8px 12px;border-radius:12px;background:var(--color-gray-light);font-size:13px;color:var(--color-gray-text);font-style:italic;white-space:pre-line">${q}</div>`
       ).join('');
     }
 
@@ -75,7 +75,8 @@ import Layout from '../layouts/Layout.astro';
     function syncInputs(){
       const newQ=[];
       document.querySelectorAll('[data-qi]').forEach(el=>{
-        newQ[parseInt(el.dataset.qi)]=el.value.trim();
+        const v=el.value.trim();
+        if(v)newQ[parseInt(el.dataset.qi)]=v;
       });
       quotes=newQ.filter(q=>q!==undefined);
     }
