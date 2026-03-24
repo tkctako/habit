@@ -340,7 +340,7 @@ import Layout from '../layouts/Layout.astro';
           }else if(h.category==='感恩紀錄'){
             summary='感恩的事';
           }else if(h.category==='Podcast'){
-            if(content.podcastName)summary=content.podcastName;
+            if(content.podcastName)summary=content.podcastTopic?`${content.podcastName} / ${content.podcastTopic}`:content.podcastName;
           }else if(h.category==='運動'){
             const parts=[];
             if(content.type)parts.push(content.type);
