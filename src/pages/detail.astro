@@ -199,7 +199,9 @@ import Layout from '../layouts/Layout.astro';
             ${r.reflection?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-warm-section);border-left:3px solid var(--color-bf)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-bf)">💭 思維更新中…</p><p class="text-sm" style="white-space:pre-line">${linkify(r.reflection)}</p></div>`:''}
             ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-xs font-semibold mb-0.5">備註</p><p class="text-sm" style="white-space:pre-line">${linkify(r.note)}</p></div>`:''}`;
         }else if(tpl==='exercise'){
-          body=`<div class="rounded-lg p-3 mb-2" style="background:#f0ebe4;border-left:3px solid var(--color-red)"><p class="text-sm"><b>類型：</b>${r.type||'-'}</p><p class="text-sm"><b>時長：</b>${r.duration||'-'}</p></div>
+          const vidHtml=r.videoLink?(r.videoLink.startsWith('http')?`<a href="${r.videoLink}" target="_blank" style="color:var(--color-me);text-decoration:underline;word-break:break-all">${r.videoLink}</a>`:r.videoLink):'';
+          body=`<div class="rounded-lg p-3 mb-2" style="background:#f0ebe4;border-left:3px solid var(--color-red)"><p class="text-sm"><b>類型：</b>${r.type||'-'}</p><p class="text-sm"><b>時長：</b>${r.duration||'-'}</p>${r.calories?`<p class="text-sm"><b>🔥 Calories：</b>${r.calories}</p>`:''}${r.distance?`<p class="text-sm"><b>📏 距離：</b>${r.distance}</p>`:''}${r.location?`<p class="text-sm"><b>📍 地點：</b>${r.location}</p>`:''}</div>
+            ${vidHtml?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-me-light);border-left:3px solid var(--color-me)"><p class="text-xs font-semibold mb-0.5" style="color:var(--color-accent)">🎬 影片連結</p><p class="text-sm">${vidHtml}</p></div>`:''}
             ${r.note?`<div class="rounded-lg p-3" style="background:var(--color-gray-light);border-left:3px solid var(--color-gray-mid)"><p class="text-sm">${linkify(r.note)}</p></div>`:''}`;
         }else if(tpl==='gratitude'){
           body=`${r.items?.length?`<div class="rounded-lg p-3 mb-2" style="background:var(--color-me-light);border-left:3px solid var(--color-me)"><p class="text-xs font-semibold mb-1" style="color:var(--color-accent)">🙏 感恩的事</p>${r.items.map((item,idx)=>`<div style="display:flex;gap:8px;margin-bottom:4px;line-height:1.6"><span style="color:var(--color-me);font-weight:600;flex-shrink:0;min-width:20px;font-size:14px">${idx+1}.</span><span class="text-sm">${item}</span></div>`).join('')}</div>`:''}
@@ -270,7 +272,12 @@ import Layout from '../layouts/Layout.astro';
         <div><label class="block text-sm font-semibold mb-1">💭 思維更新中…</label><textarea id="rf-reflection" rows="3" class="form-input" style="resize:vertical" placeholder="聽完的反思與收穫...">${r.reflection||''}</textarea></div>
         <div><label class="block text-sm font-semibold mb-1">備註</label><textarea id="rf-note" rows="2" class="form-input" style="resize:vertical">${r.note||''}</textarea></div>`;
       }
-      if(tpl==='exercise')return`<div><label class="block text-sm font-semibold mb-1">運動類型</label><input id="rf-type" value="${r.type||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">時長</label><input id="rf-duration" value="${r.duration||''}" class="form-input" /></div><div><label class="block text-sm font-semibold mb-1">備註</label><textarea id="rf-note" rows="2" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
+      if(tpl==='exercise')return`<div><label class="block text-sm font-semibold mb-1">運動類型</label><input id="rf-type" value="${r.type||''}" class="form-input" /></div>
+        <div><label class="block text-sm font-semibold mb-1">時長</label><input id="rf-duration" value="${r.duration||''}" class="form-input" placeholder="例：30分鐘" /></div>
+        <div class="flex gap-3"><div class="flex-1"><label class="block text-sm font-semibold mb-1">🔥 Calories</label><input id="rf-calories" value="${r.calories||''}" class="form-input" placeholder="例：350 kcal" /></div><div class="flex-1"><label class="block text-sm font-semibold mb-1">📏 距離</label><input id="rf-distance" value="${r.distance||''}" class="form-input" placeholder="例：5 km" /></div></div>
+        <div><label class="block text-sm font-semibold mb-1">📍 地點</label><input id="rf-location" value="${r.location||''}" class="form-input" placeholder="例：大安森林公園" /></div>
+        <div><label class="block text-sm font-semibold mb-1">🎬 影片連結</label><input id="rf-video-link" value="${r.videoLink||''}" class="form-input" placeholder="https://..." /></div>
+        <div><label class="block text-sm font-semibold mb-1">備註</label><textarea id="rf-note" rows="2" class="form-input" style="resize:vertical">${r.note||''}</textarea></div>`;
       return`<div><label class="block text-sm font-semibold mb-1">備註</label><textarea id="rf-note" rows="3" class="form-input" style="resize:none">${r.note||''}</textarea></div>`;
     }
 
@@ -488,7 +495,7 @@ import Layout from '../layouts/Layout.astro';
         content.topic=document.getElementById('rf-topic').value.trim();
         content.source=document.getElementById('rf-source').value.trim();
         content.words=w;content.note=document.getElementById('rf-note').value;
-      }else if(tpl==='exercise'){content.type=document.getElementById('rf-type').value;content.duration=document.getElementById('rf-duration').value;content.note=document.getElementById('rf-note').value;}
+      }else if(tpl==='exercise'){content.type=document.getElementById('rf-type').value;content.duration=document.getElementById('rf-duration').value;content.calories=document.getElementById('rf-calories')?.value.trim()||'';content.distance=document.getElementById('rf-distance')?.value.trim()||'';content.location=document.getElementById('rf-location')?.value.trim()||'';content.videoLink=document.getElementById('rf-video-link')?.value.trim()||'';content.note=document.getElementById('rf-note').value;}
       else if(tpl==='gratitude'){
         const items=[];document.querySelectorAll('[data-gratitude-input]').forEach(el=>{const v=el.value.trim();if(v)items.push(v);});
         content.items=items;content.note=document.getElementById('rf-note').value;
